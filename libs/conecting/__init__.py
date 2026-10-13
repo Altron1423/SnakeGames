@@ -1,3 +1,6 @@
+"""Package for handling connections between client and server.
+"""
+
 from .user import User
 from .soc_connector import SocConnector
 from .server import ServerConnector

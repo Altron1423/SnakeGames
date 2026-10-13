@@ -6,9 +6,18 @@ from libs.loaders.loader import Loader
 
 
 class ImageLoader(Loader):
+    """A loader class for images.
+
+    This class is responsible for loading image files and managing them in memory.
+    """
     elements: dict[str, tuple[pg.Surface | None, str]]
 
-    def load(self, path: Path):
+    def load(self, path: Path) -> None:
+        """Loads images from a specified path.
+
+        Args:
+            path (Path): The path to the file containing image information.
+        """
         with path.open("r", encoding="utf-8") as file:
             json_data = json.load(file)
             if json_data["type"] == "image":
@@ -18,6 +27,14 @@ class ImageLoader(Loader):
                     self.add(image, name)
 
     def get(self, name: str) -> pg.Surface | None:
+        """Retrieves an image by name.
+
+        Args:
+            name (str): The name of the image.
+
+        Returns:
+            pg.Surface | None: The image surface if loaded, otherwise None.
+        """
         image = self.elements.get(name)
         if image is None:
             return None

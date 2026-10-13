@@ -7,19 +7,24 @@ from .map_block_loader import MapBlockLoader,   map_block_loader
 from .dimension_loader import DimensionLoader,  dimension_loader
 from .tile_map_loader  import TileMapLoader,    tile_map_loader
 
-
 class MapLoader(Loader):
+    """A loader class for maps.
+
+    This class is responsible for loading various map components.
+    """
     map_plate_loader: MapPlateLoader  = map_plate_loader
     map_chunk_loader: MapChunkLoader  = map_chunk_loader
     map_block_loader: MapBlockLoader  = map_block_loader
     dimension_loader: DimensionLoader = dimension_loader
     tile_map_loader:  TileMapLoader   = tile_map_loader
 
-    def __init__(self):
-        ...
-
     @classmethod
     def load_from_dir(cls, path_map: Path) -> None:
+        """Loads all map components from a directory.
+
+        Args:
+            path_map (Path): The base directory containing subdirectories for each component.
+        """
         map_plate_loader.load_from_dir(path_map.joinpath("plate"))
         map_chunk_loader.load_from_dir(path_map.joinpath("chunk"))
         map_block_loader.load_from_dir(path_map.joinpath("block"))

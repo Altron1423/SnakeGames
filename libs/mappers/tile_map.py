@@ -8,9 +8,22 @@ from libs.dtos import (
 
 @dataclass(frozen=True, slots=True)
 class TileMapMapper:
+    """Mapper for tile map data.
+
+    This class provides static methods to convert between TileMapDTO
+    and dictionary representations.
+    """
 
     @staticmethod
-    def dto_to_dict(dto: TileMapDTO) -> dict[str, str]:
+    def dto_to_dict(dto: TileMapDTO) -> dict[str, str | list]:
+        """Converts a TileMapDTO to a dictionary.
+
+        Args:
+            dto (TileMapDTO): The tile map data DTO.
+
+        Returns:
+            dict[str, str]: A dictionary representation of the tile map data.
+        """
         return {
             "name": dto.name,
             "texture": dto.texture,
@@ -20,6 +33,14 @@ class TileMapMapper:
 
     @staticmethod
     def dict_to_dto(data: dict) -> TileMapDTO:
+        """Converts a dictionary to a TileMapDTO.
+
+        Args:
+            data (dict): The dictionary containing tile map data.
+
+        Returns:
+            TileMapDTO: The reconstructed TileMapDTO.
+        """
         tiles = {}
         for i in data["tiles"]:
             i2 = tuple(tuple(map(int, g.split(","))) for g in i.split("/"))

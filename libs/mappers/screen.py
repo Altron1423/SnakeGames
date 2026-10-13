@@ -9,9 +9,22 @@ from libs.math import Recalc, Vector2
 
 @dataclass(frozen=True, slots=True)
 class ButtonMapper:
+    """Mapper for button data.
+
+    This class provides static methods to convert between ButtonDTO
+    and dictionary representations.
+    """
 
     @staticmethod
     def dto_to_dict(dto: ButtonDTO) -> dict[str, str]:
+        """Converts a ButtonDTO to a dictionary.
+
+        Args:
+            dto (ButtonDTO): The button data DTO.
+
+        Returns:
+            dict[str, str]: A dictionary representation of the button data.
+        """
         return {
             "type": dto.type,
             "position": str(dto.position),
@@ -23,6 +36,14 @@ class ButtonMapper:
 
     @staticmethod
     def dict_to_dto(data: dict) -> ButtonDTO:
+        """Converts a dictionary to a ButtonDTO.
+
+        Args:
+            data (dict): The dictionary containing button data.
+
+        Returns:
+            ButtonDTO: The reconstructed ButtonDTO.
+        """
         triggers: dict[tuple[str, bool], str] = {}
         for i, command in data.get("triggers", {}).items():
             dt = i.split("/")
@@ -34,13 +55,9 @@ class ButtonMapper:
         position = data.get("position")
         if position is not None:
             position = Recalc.load_from_str(position)
-        # else:
-        #     position = Recalc(Vector2(0,0), Vector2(0,0))
         size = data.get("size")
         if size is not None:
             size = Recalc.load_from_str(size)
-        # else:
-        #     size = Recalc(Vector2(0,0), Vector2(0,0))
         return ButtonDTO(
             type=data["type"],
             position=position,
@@ -53,9 +70,22 @@ class ButtonMapper:
 
 @dataclass(frozen=True, slots=True)
 class WindowDataMapper:
+    """Mapper for window data.
+
+    This class provides static methods to convert between WindowDataDTO
+    and dictionary representations.
+    """
 
     @staticmethod
-    def dto_to_dict(dto: WindowDataDTO) -> dict[str, str]:
+    def dto_to_dict(dto: WindowDataDTO) -> dict[str, str | list]:
+        """Converts a WindowDataDTO to a dictionary.
+
+        Args:
+            dto (WindowDataDTO): The window data DTO.
+
+        Returns:
+            dict[str, str | list]: A dictionary representation of the window data.
+        """
         return {
             "recalc_position": str(dto.recalc_position),
             "recalc_size": str(dto.recalc_size),
@@ -66,6 +96,14 @@ class WindowDataMapper:
 
     @staticmethod
     def dict_to_dto(data: dict[str, list | str]) -> WindowDataDTO:
+        """Converts a dictionary to a WindowDataDTO.
+
+        Args:
+            data (dict[str, list | str]): The dictionary containing window data.
+
+        Returns:
+            WindowDataDTO: The reconstructed WindowDataDTO.
+        """
         if "window_position" in data:
             recalc_position = Recalc.load_from_str(data["window_position"])
         else:
@@ -84,9 +122,22 @@ class WindowDataMapper:
 
 @dataclass(frozen=True, slots=True)
 class WindowMapper:
+    """Mapper for window data.
+
+    This class provides static methods to convert between WindowDTO
+    and dictionary representations.
+    """
 
     @staticmethod
-    def dto_to_dict(dto: WindowDTO) -> dict[str, str]:
+    def dto_to_dict(dto: WindowDTO) -> dict[str, str | dict | list[dict]]:
+        """Converts a WindowDTO to a dictionary.
+
+        Args:
+            dto (WindowDTO): The window DTO.
+
+        Returns:
+            dict[str, str]: A dictionary representation of the window data.
+        """
         return {
             "name": dto.name,
             "data": WindowDataMapper.dto_to_dict(dto.data),
@@ -95,6 +146,14 @@ class WindowMapper:
 
     @staticmethod
     def dict_to_dto(data: dict[str, str | dict | list]) -> WindowDTO:
+        """Converts a dictionary to a WindowDTO.
+
+        Args:
+            data (dict[str, str | dict | list]): The dictionary containing window data.
+
+        Returns:
+            WindowDTO: The reconstructed WindowDTO.
+        """
         return WindowDTO(
             name=data["name"],
             data=WindowDataMapper.dict_to_dto(data["data"]),

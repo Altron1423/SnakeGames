@@ -1,7 +1,6 @@
 import os
 import json
 import shutil
-
 from datetime import datetime
 from pathlib import Path
 
@@ -31,9 +30,21 @@ from libs.save import (
 
 
 class SavesWF:
+    """Workflow manager for handling game saves.
+
+    This class provides methods for creating, loading, deleting, and
+    saving game save data. It manages a hierarchical directory structure
+    for saves, including dimensions, blocks, chunks, and plates.
+    """
+
     path_map: Path
 
     def __init__(self, path: Path):
+        """Initializes the SavesWF instance.
+
+        Args:
+            path (Path): The base directory for all save files.
+        """
         self.path = path
         self.path_map = path.joinpath("maps")
         self.path_dim = self.path_map.joinpath("dimensions")
@@ -43,12 +54,25 @@ class SavesWF:
 
     @staticmethod
     def get_save_info(path_save_directory: Path) -> DataSaveDTO:
+        """Retrieves save information from a save directory.
+
+        Args:
+            path_save_directory (Path): The path to the save directory.
+
+        Returns:
+            DataSaveDTO: The retrieved save information.
+        """
         with open(path_save_directory.joinpath("main.json"), "r", encoding="utf-8") as f:
             data = SaveMapper.dict_to_dto(json.load(f))
         return data
 
     @staticmethod
     def create_save(create_save: CreateSaveWF_DTO) -> None:
+        """Creates a new save directory and initializes it.
+
+        Args:
+            create_save (CreateSaveWF_DTO): The data for the new save.
+        """
         path = create_save.path_to_save.joinpath(create_save.name)
         os.mkdir(path)
         SavesWF.__create_file__(
@@ -58,23 +82,38 @@ class SavesWF:
                 "version": ".".join(map(str, create_save.version)),
                 "description": create_save.description,
                 "last_open": str(create_save.last_open),
-                "created": str(create_save.created),
+                "created": False,
             }
         )
         SavesWF.__create_save_files__(path)
 
     @staticmethod
     def delete(path_save_directory: Path):
+        """Deletes a save directory and all its contents.
+
+        Args:
+            path_save_directory (Path): The path to the save directory to delete.
+        """
         shutil.rmtree(path_save_directory)
 
     @staticmethod
     def load_save_light(save: SaveLight):
+        """Loads a lightweight version of a save.
+
+        Args:
+            save (SaveLight): The lightweight save object to update.
+        """
         SaveMapper.update_from_dto(
             save,
             SavesWF.get_save_info(save.path_save)
         )
 
     def load_save_full(self, save: SaveFull):
+        """Loads a full version of a save, including all dimensions and blocks.
+
+        Args:
+            save (SaveFull): The full save object to update.
+        """
         plates = {}
         chunks = {}
         blocks = {}
@@ -95,8 +134,9 @@ class SavesWF:
             dim = self.__load_dimension__(iPath, blocks)
             dimensions.append(dim)
 
-        with open(self.path.joinpath("data.json"), "r", encoding="utf-8") as file:
+        with (self.path / "data.json").open("r", encoding="utf-8") as file:
             data = json.load(file)
+            print(data)
 
         save.spawn_position = Position2(data["spawn_position"])
         save.spawn_map_block = blocks[data["spawn_map_block"]]
@@ -105,6 +145,14 @@ class SavesWF:
 
     @staticmethod
     def __load_plates__(path: Path) -> MapPlate:
+        """Loads a plate from a file.
+
+        Args:
+            path (Path): The path to the plate file.
+
+        Returns:
+            MapPlate: The loaded plate object.
+        """
         with open(path, "r", encoding="utf-8") as file:
             dto = MapPlateSaveMapper.dict_to_dto(json.load(file))
         plate = map_plate_loader.get_changeable(dto.name)
@@ -113,6 +161,15 @@ class SavesWF:
 
     @staticmethod
     def __load_chunk__(path: Path, plates: dict[str, MapPlate]) -> MapChunk:
+        """Loads a chunk from a file.
+
+        Args:
+            path (Path): The path to the chunk file.
+            plates (dict): Dictionary of loaded plates.
+
+        Returns:
+            MapChunk: The loaded chunk object.
+        """
         with open(path, "r", encoding="utf-8") as file:
             dto = MapChunkSaveMapper.dict_to_dto(json.load(file))
         chunk = map_chunk_loader.get_new(dto.name)
@@ -126,6 +183,15 @@ class SavesWF:
 
     @staticmethod
     def __load_block__(path: Path, chunks: dict[str, MapChunk]) -> MapBlock:
+        """Loads a block from a file.
+
+        Args:
+            path (Path): The path to the block file.
+            chunks (dict): Dictionary of loaded chunks.
+
+        Returns:
+            MapBlock: The loaded block object.
+        """
         with open(path, "r", encoding="utf-8") as file:
             dto = MapBlockSaveMapper.dict_to_dto(json.load(file))
         block = map_block_loader.get_new(dto.name)
@@ -141,6 +207,15 @@ class SavesWF:
 
     @staticmethod
     def __load_dimension__(path: Path, blocks: dict[str, MapBlock]) -> Dimension:
+        """Loads a dimension from a file.
+
+        Args:
+            path (Path): The path to the dimension file.
+            blocks (dict): Dictionary of loaded blocks.
+
+        Returns:
+            Dimension: The loaded dimension object.
+        """
         with open(path, "r", encoding="utf-8") as file:
             dto = DimensionSaveMapper.dict_to_dto(json.load(file))
         dim: Dimension = dimension_loader.get_new(dto.name)
@@ -152,9 +227,12 @@ class SavesWF:
             )
         return dim
 
-
     def saving(self, save_full: SaveFull):
+        """Saves a full save object, including all dimensions and blocks.
 
+        Args:
+            save_full (SaveFull): The full save object to save.
+        """
         with open(self.path.joinpath("main.json"), "w", encoding="utf-8") as file:
             json.dump(
                 {
@@ -202,32 +280,52 @@ class SavesWF:
                                 )
 
     def __saving_plate__(self, map_plate: MapPlateSaveDTO):
+        """Saves a plate to a file.
+
+        Args:
+            map_plate (MapPlateSaveDTO): The plate data DTO to save.
+        """
         path = self.path_plates.joinpath(f"{map_plate.name}_{map_plate.id}.json")
-        with open(path, "+w", encoding="utf-8") as file:
+        with open(path, "w", encoding="utf-8") as file:
             json.dump(
                 MapPlateSaveMapper.dto_to_dict(map_plate),
                 file
             )
 
     def __saving_chunk__(self, map_chunk: MapChunkSaveDTO):
+        """Saves a chunk to a file.
+
+        Args:
+            map_chunk (MapChunkSaveDTO): The chunk data DTO to save.
+        """
         path = self.path_chunks.joinpath(f"{map_chunk.name}_{map_chunk.id}.json")
-        with open(path, "+w", encoding="utf-8") as file:
+        with open(path, "w", encoding="utf-8") as file:
             json.dump(
                 MapChunkSaveMapper.dto_to_dict(map_chunk),
                 file
             )
 
     def __saving_block__(self, map_block: MapBlockSaveDTO):
+        """Saves a block to a file.
+
+        Args:
+            map_block (MapBlockSaveDTO): The block data DTO to save.
+        """
         path = self.path_blocks.joinpath(f"{map_block.name}_{map_block.id}.json")
-        with open(path, "+w", encoding="utf-8") as file:
+        with open(path, "w", encoding="utf-8") as file:
             json.dump(
                 MapBlockSaveMapper.dto_to_dict(map_block),
                 file
             )
 
     def __saving_dimension__(self, dimension: DimensionSaveDTO):
+        """Saves a dimension to a file.
+
+        Args:
+            dimension (DimensionSaveDTO): The dimension data DTO to save.
+        """
         path = self.path_dim.joinpath(f"{dimension.name}.json")
-        with open(path, "+w", encoding="utf-8") as file:
+        with open(path, "w", encoding="utf-8") as file:
             json.dump(
                 DimensionSaveMapper.dto_to_dict(dimension),
                 file
@@ -235,6 +333,11 @@ class SavesWF:
 
     @classmethod
     def __create_save_files__(cls, path: Path) -> None:
+        """Initializes basic save files in the save directory.
+
+        Args:
+            path (Path): The path to the save directory.
+        """
         cls.__create_file__(
             path.joinpath("players.json"),
             {
@@ -250,12 +353,19 @@ class SavesWF:
             }
         )
         path_map = path.joinpath("maps")
-        os.mkdir(path_map.joinpath("dimensions"))
-        os.mkdir(path_map.joinpath("blocks"))
-        os.mkdir(path_map.joinpath("chunks"))
-        os.mkdir(path_map.joinpath("plates"))
+        os.mkdir(path_map)
+        os.mkdir(path_map / "dimensions")
+        os.mkdir(path_map / "blocks")
+        os.mkdir(path_map / "chunks")
+        os.mkdir(path_map / "plates")
 
     @staticmethod
     def __create_file__(path: Path, data: dict):
+        """Writes data to a file.
+
+        Args:
+            path (Path): The path to the file.
+            data (dict): The data to write.
+        """
         with open(path, "a", encoding="utf-8") as file:
             json.dump(data, file)

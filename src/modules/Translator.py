@@ -1,7 +1,7 @@
 import asyncio
 from pathlib import Path
 from libs.Loger import log, log_step
-from googletrans import Translator as GTr
+# from googletrans import Translator as GTr
 from time import sleep
 # from translator import translator as TR
 
@@ -19,13 +19,13 @@ class Translator:
         self.AuTranslator = None
 
     @staticmethod
-    def _get_struct_() -> dict[str: dict]:
+    def _get_struct_() -> dict[str, dict]:
         return {
             "sistem": Translator._get_module_struct_()
         }
 
     @staticmethod
-    def _get_module_struct_() -> dict[str: dict]:
+    def _get_module_struct_() -> dict[str, dict]:
         return {
             "item": {},
             "block": {},
@@ -49,14 +49,12 @@ class Translator:
             i += 1
         language_dictionary[path[i]] = translate
 
-    def _get_translate(self, path: list) -> dict[str: bool, str]:
-        i = 0
+    def _get_translate(self, path: list) -> dict[str, bool | str]:
         dictionary = self.now_dictionary
-        while i < len(path):
+        for i in range(len(path)):
             if path[i] not in dictionary:
-                return {"find": False, "text": path}
+                return {"find": False, "text": path[i]}
             dictionary = dictionary[path[i]]
-            i += 1
         return {"find": True, "text": dictionary}
 
     def _add_dict(self, name: str, dictionary: dict):
@@ -74,8 +72,9 @@ class Translator:
     def _web_translate(self, word, language):
         # print(word)
         try:#, src=languages[self.now_language]
-            gtr = GTr()
-            text = asyncio.run(gtr.translate(word, dest=languages[language])).text
+            # gtr = GTr()
+            # text = asyncio.run(gtr.translate(word, dest=languages[language])).text
+            text = "NONE"
             sleep(1)
             return text
         # except AttributeError as e:
@@ -151,7 +150,7 @@ class Translator:
         if language not in self.dictionary and self.now_language in languages and language in languages:
             log("Start auto translate")
             self.dictionary[language] = self._auto_translate_rec(self.now_dictionary, language)
-            translator.save_language("EN_en", r"C:\Users\Altron\PycharmProjects\MMO_project\src\langs")
+            self.save_language("EN_en", r"src/data/langs")
 
     def save_language(self, language, path):
         path = Path(path).joinpath(f"{language}.lang")
@@ -174,7 +173,7 @@ if __name__ == "__main__":
     translator = Translator()
 
 
-    translator.load_langs_directory(r"C:\Users\Altron\PycharmProjects\MMO_project\src\langs")
+    translator.load_langs_directory("src/langs")
     log(translator.dictionary)
     translator.set_language("RU_ru")
     log(translator.translation("minecraft.item.lola"))

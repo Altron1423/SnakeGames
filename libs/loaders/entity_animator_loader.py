@@ -1,6 +1,5 @@
 import json
 import pygame as pg
-
 from pathlib import Path
 
 from libs import AnimatorDataMapper
@@ -12,9 +11,18 @@ from ..animator_controller import AnimationPack, EntityAnimator
 
 
 class EntityAnimatorLoader(Loader):
+    """A loader class for entity animators.
+
+    This class is responsible for loading entity animator data from files.
+    """
     elements: dict[str, EntityAnimator]
 
     def load(self, path: Path) -> None:
+        """Loads an entity animator from a specified path.
+
+        Args:
+            path (Path): The path to the file containing entity animator data.
+        """
         with Path(path).open("r", encoding="utf-8") as file:
             json_data = json.load(file)
             if json_data["type"] == "entity_animator":
@@ -33,7 +41,7 @@ class EntityAnimatorLoader(Loader):
                         surf.blit(
                             image,
                             (
-                                -data.size.x*i,
+                                -data.size.x * i,
                                 line
                             )
                         )
@@ -47,9 +55,25 @@ class EntityAnimatorLoader(Loader):
                 self.add(entity_animator, data.name)
 
     def get(self, name: str) -> EntityAnimator | None:
+        """Retrieves an entity animator by name.
+
+        Args:
+            name (str): The name of the entity animator.
+
+        Returns:
+            EntityAnimator | None: The entity animator object if found, otherwise None.
+        """
         return super().get(name)
 
     def get_new(self, name: str) -> EntityAnimator | None:
+        """Retrieves an entity animator or a new one if not found.
+
+        Args:
+            name (str): The name of the entity animator.
+
+        Returns:
+            EntityAnimator | None: The entity animator object.
+        """
         return super().get_new(name)
 
 

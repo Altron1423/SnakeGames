@@ -16,6 +16,20 @@ from libs.loaders import StylerLoader, ImageLoader, ManyPolygonizerLoader
 
 
 class MainScreen:
+    """The main screen of the application, handles the display and input.
+
+    Attributes:
+        _static_size_ (bool): If True, the screen size is static.
+        _application ("Application"): The application instance.
+        screen_size (Size2): The size of the main screen.
+        center_screen (Position2): The center of the main screen.
+        screenOSN (pg.Surface): The main Pygame surface for OS window.
+        screen_main (pg.Surface): The main surface for drawing.
+        mouse (Mouse): The mouse handler.
+        window_manager ("WindowManager"): The manager for application windows.
+        Msize (tuple[int, int]): Scaling factor for the main screen.
+        shift_main_screen (tuple[int, int]): Shift applied to the main screen.
+    """
     _static_size_: bool = False
     _application: "Application"
     screen_size: Size2 = Size2()
@@ -28,8 +42,12 @@ class MainScreen:
     shift_main_screen: tuple[int, int] = (0, 0)
 
 
-
     def __init__(self, application: "Application"):
+        """Initializes the MainScreen.
+
+        Args:
+            application ("Application"): The application instance.
+        """
         self._application = application
 
         self.screen_size = Size2(CORE.start_size)
@@ -45,6 +63,8 @@ class MainScreen:
         loger.status("MainScreen init complete")
 
     def _set_start_parameters(self):
+        """Sets the initial screen parameters based on the monitor info.
+        """
         inf = pg.display.Info()
         self.screen_size = Size2(inf.current_w, inf.current_h) // 10
         self.center_screen = self.screen_size // 2
@@ -52,6 +72,8 @@ class MainScreen:
         loger.status("Set MainScreen parameters complete")
 
     def draw(self):
+        """Draws the main screen contents.
+        """
         self.screen_main.fill((200, 200, 200))
         self.screenOSN.fill((0, 0, 0))
 
@@ -59,47 +81,40 @@ class MainScreen:
         self.window_blit()
 
     def resize_main_screen(self, new_size):
+        """Resizes the main screen.
+
+        Args:
+            new_size: The new size for the screen.
+        """
         if self._static_size_:
             loger.error("Static format not realize. Please use _static_size_ = False")
             self._static_size_ = False
-            # k1 = self.screen_size[0] / self.WIDTH
-            # k2 = self.screen_size[1] / self.HEIGHT
-            # if k1 < k2:
-            #     self.K_Mushtub = k1
-            #
-            #     self.shift_main_screen = (
-            #         0,
-            #         (self.screen_size[1] - self.HEIGHT * k1) // 2
-            #     )
-            # else:
-            #     self.K_Mushtub = k2
-            #
-            #     self.shift_main_screen = (
-            #         (self.screen_size[0] - self.WIDTH * k2) // 2,
-            #         0
-            #     )
-            #
-            # self.Msize = (self.WIDTH * self.K_Mushtub, self.HEIGHT * self.K_Mushtub)
-            # self.mouse.update_screen_data(*self.shift_main_screen, self.K_Mushtub)
         else:
             self.screen_size = new_size
-            # loger.log(new_size)
             self.center_screen = self.screen_size // 2
             self.screen_main = pg.Surface(self.screen_size.tuple)
             self.window_manager.resize(self.screen_size)
 
     def window_blit(self):
-
+        """Blits the main screen onto the OS window and updates the display.
+        """
         self.mouse.update()
 
         self.screenOSN.blit(self.screen_main, (0, 0))
-        # screen2 = pg.transform.scale(self.screen_main, self.Msize)
-        # self.screenOSN.blit(screen2, self.shift_main_screen)
 
         pg.display.update()
 
 
 class Window(Resizer):
+    """Represents a window within the application.
+
+    Attributes:
+        mainWindow ("Window"): The main window currently in focus.
+        visible (list[Window]): A list of currently visible windows.
+        windows (dict[str, Window]): A dictionary of all available windows.
+        windows_keys (list[str]): A list of window names.
+        main_screen (MainScreen): The main screen instance.
+    """
     first_draw_task: list[tuple[pg.Surface, tuple[int, int]]]
     second_draw_task: list[tuple[pg.Surface, tuple[int, int]]]
 
@@ -245,7 +260,12 @@ class WindowManager:
     visible: list[Window]
     size: Size2
 
-    def __init__(self, main_screen:MainScreen):
+    def __init__(self, main_screen: MainScreen):
+        """Initializes the Window.
+
+        Args:
+            main_screen (MainScreen): The main screen instance.
+        """
         self.main_screen = main_screen
         self.windows = []
         self.windows_keys = {}
@@ -308,50 +328,79 @@ class WindowManager:
         pass
 
     def select(self, button):
-        self.mainWindow.button_manager.select(button)
+        """Selects a button in the main window or visible windows.
+
+        Args:
+            button: The button to select.
+        """
+        if self.mainWindow:
+            self.mainWindow.button_manager.select(button)
         for window in self.visible:
             window.button_manager.select(button)
 
-    def generate_function(self, triggers: str | None, button: buttons.Button) -> buttons.TriggerGen:
-        trigger = buttons.TriggerGen()
-        for i_trigger in triggers:
+    def generate_function(self, triggers, button: buttons.Button) -> buttons.TriggerGen:
+        """Generates a trigger function based on triggers string.
 
-            called_path, called = triggers[i_trigger].split(":")
-            if len(i_trigger[0]) == 2:
-                if i_trigger[0] == 'm1':
-                    if called_path == "move_window":
-                        trigger.LMU(lambda x: self.set_main_window(called))
-                    elif called_path == "run_function":
-                        trigger.LMU(self.run_called(called, button))
-            else:
-                if i_trigger[1]:
-                    if called_path == "move_window":
-                        ...
-                    elif called_path == "run_function":
-                        trigger.key_down(i_trigger[0], self.run_called(called, button))
+        Args:
+            triggers (str | None): The trigger configuration.
+            button (buttons.Button): The button associated with the trigger.
+
+        Returns:
+            buttons.TriggerGen: The generated trigger generator.
+        """
+        trigger = buttons.TriggerGen()
+        if triggers:
+            for i_trigger in triggers:
+                called_path, called = triggers[i_trigger].split(":")
+                if len(i_trigger[0]) == 2:
+                    if i_trigger[0] == 'm1':
+                        if called_path == "move_window":
+                            trigger.LMU(lambda x: self.set_main_window(called))
+                        elif called_path == "run_function":
+                            trigger.LMU(self.run_called(called, button))
                 else:
-                    if called_path == "move_window":
-                        ...
-                    elif called_path == "run_function":
-                        trigger.key_up(i_trigger[0], self.run_called(called, button))
+                    if i_trigger[1]:
+                        if called_path == "move_window":
+                            ...
+                        elif called_path == "run_function":
+                            trigger.key_down(i_trigger[0], self.run_called(called, button))
+                    else:
+                        if called_path == "move_window":
+                            ...
+                        elif called_path == "run_function":
+                            trigger.key_up(i_trigger[0], self.run_called(called, button))
 
         return trigger
 
     def set_main_window(self, window):
+        """Sets the main window.
+
+        Args:
+            window (str): The name of the window to set as main.
+        """
         self.mainWindow = self.windows[self.windows_keys[window]]
         loger.log(f"Move to '{window}' window")
 
     def run_called(self, called_path, button):
+        """Executes a function call.
+
+        Args:
+            called_path (str): The function path to call.
+            button: The button that triggered the call.
+
+        Returns:
+            callable: A function that, when called, executes the requested function.
+        """
         def get_called(called_path):
-            # loger.log("run_called", data)
             result = self.main_screen._application.give_function(called_path)
-            if result["result"]:
+            if result.get("result"):
                 return result["function"]
             else:
-                print(result["error"])
+                print(result.get("error"))
+                return None
 
         data = {}
-        if called_path[-1] == ")" and "(" in called_path:
+        if called_path.endswith(")") and "(" in called_path:
             called_path, raw_data = called_path.split("(")
             for i_data in raw_data[:-1].split(","):
                 x = i_data.strip().split("=")
@@ -360,36 +409,53 @@ class WindowManager:
         return lambda _: get_called(called_path)(button, **data)
 
     def close_window(self, window=None):
+        """Closes a window.
+
+        Args:
+            window (Window | None): The window to close. If None, all windows are closed.
+        """
         if window is None:
             self.visible = []
         else:
             win = self.get_window(window)
-            if win is not None:
-                if win in self.visible:
-                    self.visible.remove(win)
+            if win is not None and win in self.visible:
+                self.visible.remove(win)
 
-    def open_window(self, window):
-        self.visible.append(self.windows[self.windows_keys[window]])
+    def open_window(self, window: str):
+        """Opens a window.
 
-    def _append_buttons(self, buttons: list[str], screen:str):
+        Args:
+            window (str): The window to open.
+        """
+        if window in self.windows_keys:
+            self.visible.append(self.windows[self.windows_keys[window]])
+
+    def _append_buttons(self, buttons: list[str], screen: str):
+        """Appends buttons to a specific window.
+
+        Args:
+            buttons (list[str]): List of button texts.
+            screen (str): The screen where buttons will be appended.
+        """
         window = self.get_window(screen)
         for i_button in range(len(buttons)):
             dto = ButtonDTO(
                 type="button",
                 text=buttons[i_button],
                 triggers={("m1", True): "run_function:window/save_select"},
-                position=Recalc(None, Vector2(100,25 + i_button * 100)),
+                position=Recalc(None, Vector2(100, 25 + i_button * 100)),
                 size=Recalc(None, Vector2(400, 75)),
                 polygons_name="interface",
             )
             window.add_button(dto)
         window.set_surface_size(self.size)
 
-
     def resize(self, size: Size2):
+        """Resizes all windows.
+
+        Args:
+            size (Size2): The new size for all windows.
+        """
         self.size = size
         for window in self.windows:
             window.set_surface_size(size)
-    # def set_button_single(self, save_names: list[str]):
-    #     self.get_window("single_saves").cleen_buttons()
-    #     self._append_buttons(save_names, "single_saves")

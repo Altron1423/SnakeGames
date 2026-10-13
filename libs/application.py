@@ -1,7 +1,5 @@
 from typing import Callable
-
 import pygame as pg
-
 from pathlib import Path
 from libs.Core import CORE
 from libs.Loger import loger
@@ -11,6 +9,20 @@ from libs.ticker import Ticker, MainTicker
 
 
 class Application:
+    """Base class for the game application.
+
+    Manages the main game loop, event handling, and system-wide functions.
+
+    Attributes:
+        clock (pg.time.Clock): Pygame clock for managing frame rate.
+        TPS (int): Ticks per second.
+        tick (Ticker): Ticker object for game logic timing.
+        path (Path): The current working directory.
+        WORK (bool): Flag indicating if the application is running.
+        main_screen (screen.MainScreen): The primary screen manager.
+        function_runs (dict): A registry of functions that can be called.
+    """
+
     clock: pg.time.Clock
     TPS: int
     tick: Ticker
@@ -20,6 +32,7 @@ class Application:
     function_runs: dict[str, dict[str, list[Callable[..., None] | None]]]
 
     def __init__(self):
+        """Initializes the application, setting up screens and parameters."""
         loger.status("App init started")
 
         self._set_start_parameters()
@@ -29,11 +42,11 @@ class Application:
 
         self._create_functions_dict()
 
-
         loger.status("App init complete")
         loger.pass_line(2)
 
     def run(self):
+        """Starts the main application loop."""
         loger.status("App start")
         try:
             while self.WORK:
@@ -57,16 +70,25 @@ class Application:
             self.exit()
 
     def key_press(self, key: str, key_down: bool):
+        """Handles key press and release events.
+
+        Args:
+            key (str): The key that was pressed or released.
+            key_down (bool): True if the key was pressed, False if released.
+        """
         ...
 
     def run_more(self):
+        """Executes periodic tasks or secondary loops."""
         ...
 
     def exit(self, _=None):
+        """Exits the application cleanly."""
         self.WORK = False
         loger.log("App exit")
 
     def _set_start_parameters(self):
+        """Sets initial application parameters."""
         self.clock = pg.time.Clock()
         self.TPS = 30
         self.tick = MainTicker
@@ -77,6 +99,7 @@ class Application:
         loger.status("Set App parameters complete")
 
     def _create_functions_dict(self):
+        """Initializes the function registry for system and mods."""
         sist = {
             "exit": [self.exit, None]
         }
@@ -85,10 +108,13 @@ class Application:
         loger.status("Function giver generate complete")
 
     def add_functions(self, dict_functions: dict):
-        """
-        {"key": {"name": [lambda x: print(1), None]}}
-        :param dict_functions:
-        :return:
+        """Adds new functions to the application's registry.
+
+        Args:
+            dict_functions (dict): A dictionary where keys are categories and
+                values are dictionaries mapping function names to a list [function, None].
+        Example:
+            {"key": {"name": [lambda x: print(1), None]}}
         """
         for key, functions in dict_functions.items():
             if key != "sistem":
@@ -98,6 +124,15 @@ class Application:
                     self.function_runs[key][name] = function
 
     def give_function(self, data, passw=None):
+        """Retrieves a function from the registry based on the provided path.
+
+        Args:
+            data (list | dict): The path to the function in the registry.
+            passw (any, optional): Password required if the function requires one.
+
+        Returns:
+            dict: A dictionary containing the result and either the function or an error message.
+        """
         m: dict | list = self.function_runs
         for i in data:
             if i in m:
@@ -110,6 +145,3 @@ class Application:
             return {"result": True, "function": m[0]}
         else:
             return {"result": False, "error": [3, f"uncorrect passw"]}
-
-
-

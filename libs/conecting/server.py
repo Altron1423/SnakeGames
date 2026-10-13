@@ -19,8 +19,20 @@ from socket import (
 )
 
 
-
 class ServerConnector(SocConnector):
+    """Server-side socket connector.
+
+    Attributes:
+        access_external_connections (bool): Whether to accept external connections.
+        local_user (User): The local player/user.
+        users (list[User]): List of connected users.
+        external_connections (list[socket]): List of sockets for external connections.
+        current_users (list[tuple[str | socket, User]]): List of current user connections and User objects.
+        connect_player (Callable[[str], Any]): Callback for when a player connects.
+        disconnect_player (Callable[[str], Any]): Callback for when a player disconnects.
+        local_send_to_server_message (bytes): Message buffer for local-to-server communication.
+        local_send_to_client_message (bytes): Message buffer for server-to-client communication.
+    """
     access_external_connections: bool = False
     local_user: User
     users: list[User]
@@ -35,6 +47,11 @@ class ServerConnector(SocConnector):
     local_send_to_client_message: bytes
 
     def __init__(self, dto: ConnectClientDTO):
+        """Initializes the ServerConnector.
+
+        Args:
+            dto (ConnectClientDTO): Client connection data for the local user.
+        """
         super().__init__(dto.version)
         self.external_connections = []
         self.local_user = User(dto.name, dto.password)
@@ -44,6 +61,11 @@ class ServerConnector(SocConnector):
         self.local_send_to_client_message = b""
 
     def start_server(self):
+        """Starts the server socket and listens for incoming connections.
+
+        Raises:
+            Exception: If the server fails to start.
+        """
         loger.status(f"Server starting on {self.LOCALHOST}")
         # loger.status(f"Server starting")
         try:
@@ -57,6 +79,11 @@ class ServerConnector(SocConnector):
             loger.error("Server startup error with exception:", e)
 
     def main(self, tick):
+        """Main server loop.
+
+        Args:
+            tick (int): The current tick of the server loop.
+        """
         if self.main_socket is None:
             return
 
@@ -159,22 +186,44 @@ class ServerConnector(SocConnector):
             connect_player: Callable[[str], Any],
             disconnect_player: Callable[[str], Any]
     ):
+        """Configures the connection callbacks.
+
+        Args:
+            connect_player (Callable[[str], Any]): Callback for when a player connects.
+            disconnect_player (Callable[[str], Any]): Callback for when a player disconnects.
+        """
         self.access_external_connections = True
         self.connect_player = connect_player
         self.disconnect_player = disconnect_player
 
 
     def get_user_action(self) -> Generator[tuple[GameDataToServerDTO, str], Any, None]:
+        """Generator to iterate over user actions.
+
+        Yields:
+            tuple[GameDataToServerDTO, str]: A tuple containing the user action and the user's name.
+        """
         for _, user in self.current_users:
             for mes in user.get_user_action:
                 yield mes, user.name
 
     def send_to_user(self, dto: GameDataToClientDTO, user_name: str):
-        user = self.__find_user__(user_name)
-        user.send_to_user(dto)
+        """Sends data to a specific user.
 
+        Args:
+            dto (GameDataToClientDTO): The data to send.
+            user_name (str): The name of the user.
+        """
+        user = self.__find_user__(user_name)
+        if user:
+            user.send_to_user(dto)
 
     def get_data_from_server(self) -> Generator[GameDataToClientDTO, Any, None]:
+        """Generator to get data received from the server.
+
+        Yields:
+            GameDataToClientDTO: The next piece of data from the server.
+        """
         if len(self.local_send_to_client_message):
             raw_server_message = self.decode_message(self.local_send_to_client_message)
             self.local_send_to_client_message = b""
@@ -183,11 +232,20 @@ class ServerConnector(SocConnector):
                 yield GameDataToClientMapper.dict_to_dto(server_answer)
 
     def send_game_data(self, dto: GameDataToServerDTO):
+        """Sends game data to the local server.
+
+        Args:
+            dto (GameDataToServerDTO): The game data to send.
+        """
         self.__local_to_server_send__({
             self.game_status_message: GameDataToServerMapper.dto_to_dict(dto)
         })
 
     def close(self):
+        """Closes all connections.
+
+        Calls the parent class close method.
+        """
         for connect in self.external_connections:
             self.__send_to__(connect, self.server_close)
         for connect, _ in self.current_users:
@@ -196,6 +254,12 @@ class ServerConnector(SocConnector):
         super().close()
 
     def __send_to__(self, connect: socket | str, message: str | dict):
+        """Sends a message to a specific connection.
+
+        Args:
+            connect (socket | str): The connection (socket or user name string).
+            message (str | dict): The message to send.
+        """
         if type(message) == dict:
             message = json.dumps(message)
         message = f"<{message}>".encode()
@@ -205,17 +269,39 @@ class ServerConnector(SocConnector):
             connect.send(message)
 
     def __local_to_server_send__(self, message: str | dict):
+        """Prepares a message to be sent from local to the server.
+
+        Args:
+            message (str | dict): The message to send.
+        """
         if type(message) == dict:
             message = json.dumps(message)
         self.local_send_to_server_message = f"<{message}>".encode()
 
     def __crate_user__(self, dto: ConnectClientDTO, connect: socket) -> User:
+        """Creates a new User instance.
+
+        Args:
+            dto (ConnectClientDTO): Connection data for the user.
+            connect (socket): The socket connection for the user.
+
+        Returns:
+            User: The newly created User object.
+        """
         user = User(dto.name, dto.password)
         user.connect = connect
         self.users.append(user)
         return user
 
     def __find_user__(self, name: str) -> User | None:
+        """Finds a user by name.
+
+        Args:
+            name (str): The name of the user.
+
+        Returns:
+            User | None: The User object if found, otherwise None.
+        """
         if name == self.local_user.name:
             return self.local_user
         for user in self.users:
@@ -224,6 +310,11 @@ class ServerConnector(SocConnector):
         return None
 
     def __drop_connect__(self, connect: socket):
+        """Closes a connection and removes it from the tracking lists.
+
+        Args:
+            connect (socket): The connection to drop.
+        """
         if connect in self.external_connections:
             self.external_connections.remove(connect)
         else:
@@ -232,4 +323,3 @@ class ServerConnector(SocConnector):
                     self.current_users.remove(pair)
                     break
         connect.close()
-

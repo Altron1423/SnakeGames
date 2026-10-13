@@ -3,10 +3,19 @@ from libs.graphics.polygons import Polygon
 
 
 class TextElement(Button):
+    """A button element that displays text.
 
+    Attributes:
+        text_polygon (Polygon | None): The polygon representing the text.
+    """
     text_polygon: Polygon | None
 
     def set_text(self, text: str | list[str]) -> None:
+        """Sets the text for the element.
+
+        Args:
+            text (str | list[str]): The text string or a list of strings for multiple polygons.
+        """
         if type(text) == str:
             self.text_polygon.set_text(text)
         elif type(text) == list:

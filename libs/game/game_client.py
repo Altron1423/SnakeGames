@@ -4,7 +4,7 @@ import pygame as pg
 
 from typing import Callable, Generator, Any
 
-from .entitys import ClientPlayer, ClientEntity
+from .entitys import ClientPlayer, ClientEnemy
 from .. import GameDataToClientDTO, GameDataToServerDTO, loger
 from ..ticker import Ticker, MainTicker
 from ..loaders.animator_loader import animator_loader, entity_animator_loader
@@ -16,6 +16,18 @@ from ..window.camera import Camera
 L2 = 2 ** 0.5
 
 class GameClient:
+    """Manages the game client-side execution, including rendering, input handling, and communication with the server.
+
+    Attributes:
+        camera (Camera): Camera for view management.
+        ticker (Ticker): Ticker for timing.
+        get_data_from_server (Callable[[], Generator[GameDataToClientDTO, Any, None]]): Function to fetch data from the server.
+        send_game_data (Callable[[GameDataToServerDTO], None]): Function to send data to the server.
+        window (Window): Window for rendering.
+        player (ClientPlayer): Client-side representation of the player.
+        entities (dict[str, ClientEnemy]): Client-side representation of entities.
+        action (str | None): Current player action.
+    """
     camera: Camera
     ticker: Ticker
 
@@ -26,11 +38,16 @@ class GameClient:
     window: Window
 
     player: ClientPlayer
-    entities: dict[str, ClientEntity]
+    entities: dict[str, ClientEnemy]
 
     action: None | str = None
 
-    def __init__(self, player_name:str):
+    def __init__(self, player_name: str):
+        """Initializes the game client.
+
+        Args:
+            player_name (str): The name of the player.
+        """
         self.player = ClientPlayer(player_name)
         self.ticker = MainTicker
 
@@ -53,6 +70,13 @@ class GameClient:
             send_game_data: Callable[[GameDataToServerDTO], None],
             window: Window
     ) -> None:
+        """Sets the communication functions and the window.
+
+        Args:
+            get_data_from_server (Callable[[], Generator[GameDataToClientDTO, Any, None]]): Function to fetch data.
+            send_game_data (Callable[[GameDataToServerDTO], None]): Function to send data.
+            window (Window): The window object.
+        """
         self.get_data_from_server = get_data_from_server
         self.send_game_data = send_game_data
         self.window = window
@@ -63,7 +87,12 @@ class GameClient:
         self.camera = Camera(window, self.player, default_player_animator)
         self.camera.entities = self.entities
 
-    def moving_to(self, direction:str):
+    def moving_to(self, direction: str):
+        """Updates player's orientation based on direction input.
+
+        Args:
+            direction (str): The direction string (e.g., 'up_d', 'right_u').
+        """
         if direction == "up_d" or direction == "down_u":
             self.player.raw_orientation.z -= 1
         elif direction == "up_u" or direction == "down_d":
@@ -75,30 +104,39 @@ class GameClient:
 
         if self.player.raw_orientation.x != 0 and self.player.raw_orientation.z != 0:
             self.player.orientation = Vector2(
-                round(self.player.raw_orientation.x / L2,3),
+                round(self.player.raw_orientation.x / L2, 3),
                 round(self.player.raw_orientation.z / L2, 3)
             )
         else:
             self.player.orientation = self.player.raw_orientation
 
     def start(self):
+        """Starts the game client loop.
+        """
         _ = self.send_game_data
         loger.status("GameMain started")
 
     def draw(self):
+        """Renders the current view.
+        """
         if self.player.map_block is not None:
             self.camera.set_new_target_position(self.player.position)
             self.camera.update()
             self.window.add_task_draw(1, (self.camera.get_surface(), (0, 0)))
 
     def update_entities(self, entities):
+        """Synchronizes client entities with server data.
+
+        Args:
+            entities: The list of entity DTOs received from the server.
+        """
         names = list(self.entities.keys())
         for entity in entities:
             if entity.id == self.player.id:
                 continue
             ent = self.entities.get(entity.id)
             if ent is None:
-                ent = ClientEntity(entity.id)
+                ent = ClientEnemy(entity.id)
                 self.entities[entity.id] = ent
                 self.camera.was_new = True
             else:
@@ -108,6 +146,8 @@ class GameClient:
             self.entities.pop(name)
 
     def main(self):
+        """The main game loop iteration.
+        """
         if self.ticker % 2:
             dto = self.player.data_to_server()
 
@@ -126,4 +166,5 @@ class GameClient:
         self.draw()
 
     def action_1(self):
+        """Example action handler."""
         self.action = "1"

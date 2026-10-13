@@ -4,6 +4,14 @@ from libs.game.sub_classes.progress_bar import TriggersDTO
 from libs.math import Position2, Vector2
 
 def get_sign(x: int | float) -> int:
+    """Determines the sign of a number.
+
+    Args:
+        x (int | float): The number to check.
+
+    Returns:
+        int: 1 if x > 0, -1 if x < 0, and 0 otherwise.
+    """
     if x > 0:
         return 1
     elif x < 0:
@@ -13,6 +21,11 @@ def get_sign(x: int | float) -> int:
 FIX_CORRECT_DOT = 3
 
 class Entity:
+    """Base class for all entities in the game.
+
+    Contains common properties and behaviors for any entity, such as position,
+    health, mana, and movement logic.
+    """
     name: None | str
     id: int
     id_was_created: int = 0
@@ -37,6 +50,7 @@ class Entity:
     step_height: int
 
     def __init__(self):
+        """Initializes a new Entity instance with default values."""
         self.name = None
         self.id = Entity.id_was_created
         Entity.id_was_created += 1
@@ -63,14 +77,25 @@ class Entity:
         self.step_height = 10
 
     def add_xp(self, xp: int) -> None:
+        """Adds experience points to the entity.
+
+        Args:
+            xp (int): The amount of experience to add (before boost).
+        """
         self.xp += int(xp * self.xp_boost)
 
     def update(self):
+        """Updates the entity's state, including attributes and movement."""
         self.attributes.update()
         self.speed = 6 + self.attributes.agility // 3
         self.__move__()
 
     def transition_to(self, map_block: MapBlock):
+        """Transitions the entity to a new map block.
+
+        Args:
+            map_block (MapBlock): The target map block.
+        """
         if self.map_block is not None:
             self.transition_from()
         self.map_block = map_block
@@ -79,10 +104,16 @@ class Entity:
         self.position = Position2(150, 150)
 
     def transition_from(self):
+        """Removes the entity from the current map block."""
         self.map_block.players_in_game.remove(self)
         self.map_block.players.pop(self.name)
 
     def get_light_data(self) -> EntityToClientDTO:
+        """Retrieves data for light calculation.
+
+        Returns:
+            EntityToClientDTO: The DTO containing entity light data.
+        """
         return EntityToClientDTO(
             self.name,
             self.id,
@@ -94,6 +125,14 @@ class Entity:
 
     @classmethod
     def load_from_config(cls, dto) -> "Entity":
+        """Loads an entity from a provided configuration DTO.
+
+        Args:
+            dto: The DTO containing entity configuration.
+
+        Returns:
+            Entity: The loaded entity instance.
+        """
         entity = cls()
         entity.race = dto.race
         entity.attributes.load(dto.attributes)
@@ -104,6 +143,7 @@ class Entity:
 
 
     def __move__(self):
+        """Handles entity movement and collision detection."""
         move_on = self.orientation * self.speed * self.speed_control
         _, start_plate, start_heigh = self.__get_info_positon__(self.position)
         for i in (Vector2(1, 0), Vector2(0, 1)):
@@ -134,6 +174,15 @@ class Entity:
             self.position += move_on_1d
 
     def __get_info_positon__(self, pos: Position2 = None) -> tuple[Position2, MapPlate, int]:
+        """Helper method to get position info relative to the map structure.
+
+        Args:
+            pos (Position2, optional): The position to check. Defaults to self.position.
+
+        Returns:
+            tuple[Position2, MapPlate, int]: A tuple containing the position in plate, 
+                                            the plate itself, and the height.
+        """
         if pos is None:
             pos = self.position
         plate_size = 50
@@ -144,6 +193,7 @@ class Entity:
         return position_in_plate * plate_size, chunk.get_plate(position_plate), chunk.get_height(position_plate)
 
     def __lvl_up__(self) -> None:
+        """Handles the level up process when enough XP is gathered."""
         quantity, max_xp = self.xp.get_full(True)
         quantity -= max_xp
         max_xp = int(max_xp * self.raising_xp)
@@ -151,6 +201,11 @@ class Entity:
         self.lvl += 1
 
     def __copy__(self):
+        """Creates a copy of the current entity.
+
+        Returns:
+            Entity: A copy of the entity.
+        """
         to = self.__class__()
         to.name = self.name
         to.race = self.race

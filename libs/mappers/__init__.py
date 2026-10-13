@@ -1,3 +1,8 @@
+"""Mappers for various data types.
+
+This module provides mappers for converting between DTOs and other representations
+such as dictionaries, for different parts of the game.
+"""
 from .save import SaveMapper
 
 from .entity import AttributeLayerEntityMapper

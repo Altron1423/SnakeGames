@@ -2,7 +2,7 @@ import pygame as pg
 
 from .screen import Window
 from .. import MapPlate
-from ..game import ClientEntity
+from ..game import ClientEnemy
 from libs.animator_controller.entity_animator import EntityAnimator
 from ..loaders.image_loader import image_loader
 from ..loaders.tile_map_loader import tile_map_loader
@@ -10,29 +10,102 @@ from ..math import Size2, Position2, Vector2
 
 
 def rect(position: Position2, size: Size2) -> tuple[int, int, int, int]:
+    """Converts Position2 and Size2 to a tuple of (x, y, width, height) for pygame.
+
+    Args:
+        position (Position2): The top-left position.
+        size (Size2): The size of the rectangle.
+
+    Returns:
+        tuple[int, int, int, int]: A tuple representing the rectangle.
+    """
     return position.x, position.z, size.x, size.z
 
+
 def get_sign(x: int | float) -> int:
+    """Returns the sign of a number.
+
+    Args:
+        x (int | float): The number to get the sign of.
+
+    Returns:
+        int: 1 if positive, -1 if negative, 0 if zero.
+    """
     if x > 0:
         return 1
     elif x < 0:
         return -1
     return 0
 
+
 def set_sign_from(to_sign: int, front_sign: int) -> int:
+    """Calculates a sign based on another sign and a reference sign.
+
+    Args:
+        to_sign (int): The sign to be modified.
+        front_sign (int): The sign to use for calculation.
+
+    Returns:
+        int: The resulting sign.
+    """
     return to_sign * get_sign(front_sign)
 
+
 def get_name(map_plate: tuple[MapPlate, int] | None) -> str | None:
+    """Gets the name (texture) of a map plate if it is on layer 2.
+
+    Args:
+        map_plate (tuple[MapPlate, int] | None): A tuple containing the MapPlate and its layer, or None.
+
+    Returns:
+        str | None: The texture name of the plate, or None if not applicable.
+    """
     if map_plate is not None and map_plate[0].layer == 2:
         return map_plate[0].texture
     return None
 
+
 def gen_size_plates(start_plate: Position2, end_plate: Position2):
+    """Generates a range of positions for plates.
+
+    Args:
+        start_plate (Position2): The starting position.
+        end_plate (Position2): The ending position.
+
+    Yields:
+        Position2: The next plate position.
+    """
     for z in range(start_plate.z, end_plate.z + 1):
         for x in range(start_plate.x, end_plate.x + 1):
             yield Position2(x, z)
 
+
 class Camera:
+    """Controls the view of the game world, including position, scale, and tile management.
+
+    Attributes:
+        window_plate_size (Size2): The size of a single plate in window units.
+        window_plate_size_range (Size2): The range of plates visible in the window.
+        center_pos (Position2): The center position of the view.
+        count_plate_width (int): The number of plates horizontally.
+        count_plate_height (int): The number of plates vertically.
+        plate_size (Size2): The size of a single plate.
+        surface_size (Size2): The size of the camera surface.
+        scale (float): The scale factor of the camera.
+        scaled_collision (Size2): The scaled collision size of the player.
+        save_zone (Size2): The size of the save zone.
+        surface (pg.Surface): The camera surface.
+        window (Window): The window instance.
+        target_position (Position2): The target position for the camera to move towards.
+        position (Position2): The current position of the camera.
+        player ("Player"): The player instance.
+        player_animator (EntityAnimator): The animator for the player.
+        entities (dict[str, ClientEnemy]): A dictionary of entities currently in view.
+        was_new (bool): Flag indicating if the world state has changed.
+        first_plate (Position2): The first plate position in the current view.
+        end_plate (Position2): The last plate position in the current view.
+        map (list[list[None | tuple[MapPlate, int]]]): The current map data structure.
+    """
     window_plate_size: Size2
     window_plate_size_range: Size2
     center_pos: Position2
@@ -45,17 +118,14 @@ class Camera:
     scale: float
     scaled_collision: Size2 = Size2(0, 0)
     save_zone: Size2
-
     surface: pg.Surface
     window: Window
-
     target_position: Position2
     position: Position2
     player: "Player"
     player_animator: EntityAnimator
-    entities: dict[str, ClientEntity]
+    entities: dict[str, ClientEnemy]
     was_new: bool = False
-
     first_plate: Position2
     end_plate: Position2
     map: list[
@@ -68,6 +138,13 @@ class Camera:
 
 
     def __init__(self, window: Window, player: "Player", player_animator: EntityAnimator):
+        """Initializes the Camera.
+
+        Args:
+            window (Window): The window instance.
+            player ("Player"): The player instance.
+            player_animator (EntityAnimator): The animator for the player.
+        """
         self.window = window
         self.player = player
         self.entities = {}
@@ -78,8 +155,9 @@ class Camera:
         self.save_zone = Size2(200, 200)
 
     def draw(self):
+        """Draws the camera surface, including the map and entities.
+        """
         shift = self.position * self.scale % self.plate_size
-        # shift = Position2()
         for i_pos in gen_size_plates(self.first_plate, self.end_plate):
             pos = i_pos * self.plate_size - shift
             data = self.get_plate(i_pos)
@@ -119,15 +197,15 @@ class Camera:
                     )
                     pg.draw.rect(self.surface, (255, 0, 0), pos_plate_draw, 2)
 
-    def draw_entity(self, entity: ClientEntity):
+    def draw_entity(self, entity: ClientEnemy):
         self.player_animator.set_type(
             self.player.preferential_orientation()
         )
         position = self.plate_size * self.center_pos + (entity.position - self.position) * self.scale
         surf = entity.animator.get_surface()
         if surf is not None:
-            self.surface.blit(surf, (position - entity.scaled_collision*2).tuple)
-        pg.draw.rect(self.surface, (0, 255, 0), rect(position - entity.scaled_collision, entity.scaled_collision *2), 5)
+            self.surface.blit(surf, (position - entity.scaled_collision * 2).tuple)
+        pg.draw.rect(self.surface, (0, 255, 0), rect(position - entity.scaled_collision, entity.scaled_collision * 2), 5)
 
     def draw_entities(self):
         for name, entity in self.entities.items():
@@ -141,8 +219,8 @@ class Camera:
         position = self.plate_size * self.center_pos
         surf = self.player_animator.get_surface()
         if surf is not None:
-            self.surface.blit(surf, (position - self.scaled_collision*2).tuple)
-        pg.draw.rect(self.surface, (0, 255, 0), rect(position - self.scaled_collision, self.scaled_collision *2), 5)
+            self.surface.blit(surf, (position - self.scaled_collision * 2).tuple)
+        pg.draw.rect(self.surface, (0, 255, 0), rect(position - self.scaled_collision, self.scaled_collision * 2), 5)
 
     def get_surface(self):
         return self.surface
@@ -151,6 +229,11 @@ class Camera:
         self.target_position = position
 
     def move_on(self) -> Position2:
+        """Calculates the movement vector from the current position to the target position.
+
+        Returns:
+            Position2: The movement vector.
+        """
         # move_on = Position2(
         #     self.target_position.x
         # )
@@ -165,6 +248,8 @@ class Camera:
         return move_on
 
     def update_map(self):
+        """Updates the local map representation by fetching plates around the player.
+        """
         self.map = [
             [None] * (self.window_plate_size_range.x + 2)
             for _ in range(self.window_plate_size_range.z + 2)
@@ -174,9 +259,7 @@ class Camera:
         end_plate = None
 
         for i_pos in Position2(-1, -1) + (self.window_plate_size_range + Vector2(1, 1)):
-
             plate_position = self.position + (i_pos - self.center_pos) * Vector2(50, 50)
-
             try:
                 _, map_plate, height = self.player.__get_info_positon__(plate_position)
                 if first_plate is None:
@@ -190,6 +273,8 @@ class Camera:
         self.end_plate = end_plate
 
     def update(self):
+        """Updates the camera position, surface, and map.
+        """
         self.position += self.move_on()
 
         if self.surface_size != self.window.surface_size:
@@ -203,10 +288,24 @@ class Camera:
         self.draw_entities()
 
     def add_tile(self, position: Position2, map_plate: tuple):
+        """Adds a tile to the map at the specified position.
+
+        Args:
+            position (Position2): The position to add the tile.
+            map_plate (tuple): The tile data.
+        """
         position += 1
         self.map[position.z][position.x] = map_plate
 
     def get_plate(self, position: Position2) -> tuple[MapPlate, int] | None:
+        """Gets the map plate data at the specified position.
+
+        Args:
+            position (Position2): The position to query.
+
+        Returns:
+            tuple[MapPlate, int] | None: The plate data, or None if not found.
+        """
         position += 1
         return self.map[position.z][position.x]
 
@@ -218,13 +317,23 @@ class Camera:
             None | str, None | str
         ]
     ]:
+        """Gets the tiles around a specified position.
+
+        Args:
+            position (Position2): The position to query.
+
+        Returns:
+            tuple: A nested tuple structure containing the surrounding tile data.
+        """
         position -= 1
         return (
-            (get_name(self.get_plate(position                        )), get_name(self.get_plate(position+Position2(1, 0)))),
+            (get_name(self.get_plate(position                )), get_name(self.get_plate(position+Position2(1, 0)))),
             (get_name(self.get_plate(position+Position2(0, 1))), get_name(self.get_plate(position+Position2(1, 1)))),
         )
 
     def set_surface_size(self):
+        """Sets the camera surface size and recalculates plate-related dimensions.
+        """
         self.surface_size = self.window.surface_size
         self.surface = pg.Surface(self.surface_size.tuple)
         plate_size = self.surface_size.x // self.count_plate_width
@@ -235,13 +344,12 @@ class Camera:
         self.scale = self.plate_size.x / 50
         self.center_pos = self.window_plate_size // 2
 
-        # self.scale = 1
-        # self.plate_size = Size2(50, 50)
-
         self.player_animator.set_scale(self.scale)
         self.__update_entities__()
         self.scaled_collision = self.player.collision * self.scale
 
     def __update_entities__(self):
+        """Updates the scale for all entities in the view.
+        """
         for _, entity in self.entities.items():
             entity.set_scale(self.scale)

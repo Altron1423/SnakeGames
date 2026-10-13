@@ -6,9 +6,22 @@ from libs.math import Position2, Vector2
 
 @dataclass(frozen=True, slots=True)
 class EntityToClientMapper:
+    """Mapper for entity data sent to the client.
+
+    This class provides static methods to convert between EntityToClientDTO
+    and dictionary representations.
+    """
 
     @staticmethod
-    def dto_to_dict(dto: EntityToClientDTO) -> dict[str, str]:
+    def dto_to_dict(dto: EntityToClientDTO) -> dict[str, str | int]:
+        """Converts an EntityToClientDTO to a dictionary.
+
+        Args:
+            dto (EntityToClientDTO): The entity to client data DTO.
+
+        Returns:
+            dict[str, str]: A dictionary representation of the entity data.
+        """
         return {
             "name": dto.name,
             "id": dto.id,
@@ -20,6 +33,14 @@ class EntityToClientMapper:
 
     @staticmethod
     def dict_to_dto(data: dict) -> EntityToClientDTO:
+        """Converts a dictionary to an EntityToClientDTO.
+
+        Args:
+            data (dict): The dictionary containing entity data.
+
+        Returns:
+            EntityToClientDTO: The reconstructed EntityToClientDTO.
+        """
         from libs import ProgressBar
         return EntityToClientDTO(
             name=data["name"],
@@ -33,9 +54,22 @@ class EntityToClientMapper:
 
 @dataclass(frozen=True, slots=True)
 class AttributeLayerEntityMapper:
+    """Mapper for attribute layer entity data.
+
+    This class provides static methods to convert between AttributeLayerEntityDTO
+    and list representations.
+    """
 
     @staticmethod
     def dto_to_list(dto: AttributeLayerEntityDTO) -> list[int | float]:
+        """Converts an AttributeLayerEntityDTO to a list.
+
+        Args:
+            dto (AttributeLayerEntityDTO): The attribute layer entity data DTO.
+
+        Returns:
+            list[int | float]: A list representation of the attribute data.
+        """
         return [
             dto.constitution, dto.agility,
             dto.defense, dto.strength,
@@ -45,6 +79,14 @@ class AttributeLayerEntityMapper:
 
     @staticmethod
     def list_to_dto(data: list) -> AttributeLayerEntityDTO:
+        """Converts a list to an AttributeLayerEntityDTO.
+
+        Args:
+            data (list): The list containing attribute data.
+
+        Returns:
+            AttributeLayerEntityDTO: The reconstructed AttributeLayerEntityDTO.
+        """
         return AttributeLayerEntityDTO(
             constitution=data[0],
             agility=data[1],
