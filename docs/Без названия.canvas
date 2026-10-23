@@ -1,0 +1,40 @@
+{
+	"nodes":[
+		{"id":"4fa2fdeaffc00a3e","type":"file","file":"docs/Server.md","x":-480,"y":-440,"width":400,"height":400},
+		{"id":"49bf290af7410270","type":"text","text":"\n","x":-480,"y":600,"width":347,"height":320,"color":"5"},
+		{"id":"dd71854dc066bb28","type":"text","text":"\n","x":-827,"y":600,"width":347,"height":320,"color":"5"},
+		{"id":"30c1834e3b7d6814","type":"text","text":"\n","x":-1174,"y":-40,"width":347,"height":320,"color":"5"},
+		{"id":"7b9a8ce6875949fc","type":"text","text":"\n","x":-1174,"y":280,"width":347,"height":320,"color":"5"},
+		{"id":"1bf975d85f158208","type":"file","file":"docs/Client.md","x":-1053,"y":-920,"width":400,"height":400,"color":"5"},
+		{"id":"06beeb995879cba8","type":"text","text":"Внешний API","x":720,"y":336,"width":301,"height":329,"color":"3"},
+		{"id":"f42c1136321031d8","type":"text","text":"Задачи\n1. Работа над движком\n\t* Графика\n\t* Клиентская и серверная часть\n\t* Соединение с пользовательским решением\n2. ИИ\n3. Текстуры\n4. Гейм-дизайн\n\n---\n\nРоли\n\nЛёха: геймдизайн\n","x":-1800,"y":-920,"width":415,"height":620},
+		{"id":"453ce9c02cf26c0d","type":"text","text":"","x":-1707,"y":492,"width":50,"height":50},
+		{"id":"1294ee648a237550","type":"text","text":"","x":-1707,"y":542,"width":50,"height":50},
+		{"id":"2d75ee042873062a","type":"text","text":"","x":-1707,"y":592,"width":50,"height":50},
+		{"id":"f3101519c90764f6","type":"text","text":"","x":-1607,"y":541,"width":50,"height":50},
+		{"id":"6d3143a02b4a27b1","type":"text","text":"","x":-1657,"y":592,"width":50,"height":50},
+		{"id":"f3c8ca344b2fb87f","type":"text","text":"","x":-1757,"y":492,"width":50,"height":50},
+		{"id":"5346d475e400336b","type":"text","text":"","x":-1657,"y":492,"width":50,"height":50},
+		{"id":"926eb7c02823769c","type":"text","text":"","x":-1607,"y":492,"width":50,"height":50},
+		{"id":"71397ca1180b98a9","type":"text","text":"","x":-1607,"y":591,"width":50,"height":50},
+		{"id":"e76fcbca78a724e5","type":"text","text":"","x":-1757,"y":592,"width":50,"height":50},
+		{"id":"58d0fe4687106df3","type":"text","text":"","x":-1657,"y":542,"width":50,"height":50},
+		{"id":"5286c6d0d1b03cf9","type":"text","text":"","x":-1757,"y":542,"width":50,"height":50},
+		{"id":"f39caace6c7e4c63","type":"text","text":"","x":-1557,"y":540,"width":50,"height":50},
+		{"id":"b767e7b00ca5653b","type":"text","text":"","x":-1557,"y":491,"width":50,"height":50},
+		{"id":"21158a18535c0c51","type":"text","text":"","x":-1557,"y":590,"width":50,"height":50},
+		{"id":"8ea74890c2120db3","type":"text","text":"Python File\n\nКод контроля змейки","x":720,"y":-180,"width":301,"height":329,"color":"3"},
+		{"id":"36cb233c1aac5958","type":"text","text":"\n","x":160,"y":80,"width":347,"height":320,"color":"5"}
+	],
+	"edges":[
+		{"id":"2a6f37da3aa1a133","fromNode":"4fa2fdeaffc00a3e","fromSide":"left","toNode":"1bf975d85f158208","toSide":"bottom","label":"Состояние поля"},
+		{"id":"8eb966f7c4cc356f","fromNode":"1bf975d85f158208","fromSide":"right","toNode":"4fa2fdeaffc00a3e","toSide":"top","label":"Действие змейки"},
+		{"id":"8df8c165a90cf4b8","fromNode":"4fa2fdeaffc00a3e","fromSide":"bottom","toNode":"36cb233c1aac5958","toSide":"left","toEnd":"none"},
+		{"id":"3a04a87b245b9703","fromNode":"4fa2fdeaffc00a3e","fromSide":"bottom","toNode":"30c1834e3b7d6814","toSide":"right","toEnd":"none"},
+		{"id":"4129a95b5e98c7d2","fromNode":"dd71854dc066bb28","fromSide":"top","toNode":"4fa2fdeaffc00a3e","toSide":"bottom","toEnd":"none"},
+		{"id":"3586a530ca73865b","fromNode":"36cb233c1aac5958","fromSide":"top","toNode":"8ea74890c2120db3","toSide":"left","fromEnd":"arrow"},
+		{"id":"dbd6f4f09a5b8f95","fromNode":"4fa2fdeaffc00a3e","fromSide":"bottom","toNode":"49bf290af7410270","toSide":"top","toEnd":"none"},
+		{"id":"07db14f153a01c91","fromNode":"4fa2fdeaffc00a3e","fromSide":"bottom","toNode":"7b9a8ce6875949fc","toSide":"right","toEnd":"none"},
+		{"id":"acf9c1e9abf66172","fromNode":"36cb233c1aac5958","fromSide":"bottom","toNode":"06beeb995879cba8","toSide":"left","fromEnd":"arrow"}
+	]
+}

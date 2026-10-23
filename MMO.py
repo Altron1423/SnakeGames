@@ -17,7 +17,7 @@ class App(Application):
     server_game: GameServer | None = None
     client_game: GameClient | None = None
     run_game: bool = False
-    server: ServerConnector | ClientConnector | None = None
+    connector: ServerConnector | ClientConnector | None = None
     save_selected: str | None = None
     user_data: ConnectClientDTO
     servers: list[ConnectServerDTO]
@@ -61,7 +61,7 @@ class App(Application):
     def run_more(self):
         if self.run_game:
             try:
-                self.server.main(self.tick)
+                self.connector.main(self.tick)
             except AttributeError:
                 self.leave_game()
                 return
@@ -79,8 +79,8 @@ class App(Application):
         self.window_manager.open_window("game_select")
 
     def open_multiplayer_game(self, bat: Button=None):
-        self.server = ClientConnector(self.user_data)
-        self.servers = self.server.find_servers()
+        self.connector = ClientConnector(self.user_data)
+        self.servers = self.connector.find_servers()
         self.main_screen.append_single_saves([f"{self.servers[i].name}" for i in range(len(self.servers))])
         self.window_manager.set_main_window("online_servers")
         self.window_manager.open_window("game_select")
@@ -97,13 +97,13 @@ class App(Application):
         if self.save_selected is None:
             return
 
-        self.server = ServerConnector(self.user_data)
-        self.server.start_server()
+        self.connector = ServerConnector(self.user_data)
+        self.connector.start_server()
 
         self.client_game = GameClient(self.user_data.name)
         self.client_game.set_game_data(
-            self.server.get_data_from_server,
-            self.server.send_game_data,
+            self.connector.get_data_from_server,
+            self.connector.send_game_data,
             self.window_manager.get_window("main_game_screen")
         )
 
@@ -112,11 +112,11 @@ class App(Application):
             self.save_manager.load_full_save(
                 self.save_selected
             ),
-            self.server.get_user_action,
-            self.server.send_to_user,
+            self.connector.get_user_action,
+            self.connector.send_to_user,
             self.user_data.name
         )
-        self.server.open_connection(
+        self.connector.open_connection(
             self.server_game.player_connect,
             self.server_game.player_disconnect
         )
@@ -130,21 +130,21 @@ class App(Application):
         if self.save_selected is None:
             return
 
-        self.server.start_client()
+        self.connector.start_client()
 
 
         for i_server in self.servers:
             if i_server.name == self.save_selected:
                 address = i_server.address
                 break
-        self.server.connect(address)
-        connection = self.server.join_game()
+        self.connector.connect(address)
+        connection = self.connector.join_game()
         loger.log(connection)
         if connection:
             self.client_game = GameClient(self.user_data.name)
             self.client_game.set_game_data(
-                self.server.get_data_from_server,
-                self.server.send_game_data,
+                self.connector.get_data_from_server,
+                self.connector.send_game_data,
                 self.window_manager.get_window("main_game_screen")
             )
             self.client_game.start()
@@ -163,8 +163,8 @@ class App(Application):
         if self.server_game is not None:
             self.server_game.saving()
             self.server_game = None
-        self.server.close()
-        self.server = None
+        self.connector.close()
+        self.connector = None
         self.open_game_menu()
 
     def moving_to(self, bat: Button=None, direction: str = ""):
@@ -176,8 +176,8 @@ class App(Application):
             self.client_game.action_1()
 
     def exit(self, _=None):
-        if self.server:
-            self.server.close()
+        if self.connector:
+            self.connector.close()
         if self.server_game:
             self.server_game.saving()
         super().exit()

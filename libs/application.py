@@ -55,7 +55,7 @@ class Application:
 
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
-                        self.exit(None)
+                        self.exit()
                     elif event.type == pg.KEYDOWN or event.type == pg.KEYUP:
                         self.main_screen.window_manager.key_press(event.key, event.type)
                         self.key_press(event.key, event.type == pg.KEYDOWN)

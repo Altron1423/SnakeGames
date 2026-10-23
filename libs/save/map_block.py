@@ -30,9 +30,9 @@ class MapBlock:
         ]
     ]
     players_in_game: list["Player"]
-    players: dict[str, "Player"]
-    enemies: list["Enemy"]
-    entities_dto: list[EntityToClientDTO]
+    players:         dict[str, "Player"]
+    enemies:         list["Enemy"]
+    entities_dto:    list[EntityToClientDTO]
     entities_ranges: dict[tuple[str, str], int]
 
     def __init__(self, size: Size2, name: str):
