@@ -2,6 +2,9 @@ from libs.save.map_chunk import MapChunk
 from libs.math import Size2, Position2
 from libs.dtos.entity import EntityToClientDTO
 
+from random import randint
+from typing import Callable
+
 class MapBlock:
     """Represents a map block containing chunks and entities.
 
@@ -34,6 +37,8 @@ class MapBlock:
     enemies:         list["Enemy"]
     entities_dto:    list[EntityToClientDTO]
     entities_ranges: dict[tuple[str, str], int]
+    generator_x:     Callable[[int, int], int]
+    generator_y:     Callable[[int, int], int]
 
     def __init__(self, size: Size2, name: str):
         """Initializes a new MapBlock instance.
@@ -55,6 +60,7 @@ class MapBlock:
         self.enemies = []
         self.entities_dto = []
         self.entities_ranges = {}
+        self.generator_x = self.generator_y = lambda a, b: randint(a, b)
 
     def set_form(self, form: list[list[MapChunk | None]]):
         """Sets the chunk matrix for the map block.
@@ -168,6 +174,39 @@ class MapBlock:
         """
         enemy.map_block = self
         self.enemies.append(enemy)
+
+    def create_fruit(self):
+        """Crates a fruit in the block."""
+        x = self.generator_x(0, self.size.x)
+        z = self.generator_y(0, self.size.z)
+        fruit = ""
+
+        fined = False
+        chunk_position = Position2(x, z)
+        chunk = self.get_chunk(chunk_position)
+        for i in range(5):
+            if chunk.get_fruit_count < chunk.get_fruit_limit:
+                fined = True
+            else:
+                mnc: MapChunk | None = None
+                for p_raw in [
+                    Position2( 0, -1),
+                    Position2( 1,  0),
+                    Position2( 0,  1),
+                    Position2(-1,  0)
+                ]:
+                    p = chunk_position + p_raw
+                    if p in self.size:
+                        nc = self.get_chunk(p)
+                        if mnc is None:
+                            mnc = nc
+                        elif nc.get_fruit_count < mnc.get_fruit_count:
+                            mnc = nc
+                chunk = mnc
+            if fined:
+                chunk.add_fruit(fruit)
+                # self.add_enemy(fruit)
+                break
 
     @property
     def Size(self):

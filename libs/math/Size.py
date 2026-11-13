@@ -24,7 +24,7 @@ class Size2(Vector2):
             bool: True if the position is within the bounds, False otherwise.
         """
         from libs.math import Position2
-        return 0 <= item.x <= self.x and 0 <= item.z <= self.z
+        return 0 <= item.x < self.x and 0 <= item.z < self.z
 
     def __iter__(self):
         """Iterates over all Position2 points within the size.

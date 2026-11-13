@@ -11,6 +11,8 @@ class MapChunk:
         size (Size2): The size of the chunk.
         map (list[list[MapPlate | None]]): The matrix of plates.
         height_map (list[list[int]]): A 2D matrix representing the height map.
+        _fruits (list[]): list with fruits.
+        _fruits_limit (int): The maximum amount of fruits to limit the chunk.
     """
     id: int = 1
 
@@ -27,6 +29,8 @@ class MapChunk:
             int
         ]
     ]
+    _fruits: list
+    _fruits_limit: int
 
     def __init__(self, name: str, size: Size2):
         """Initializes a new MapChunk instance.
@@ -43,6 +47,8 @@ class MapChunk:
             [None] * self.size.x for _ in range(self.size.z)
         ]
         # self.height_map = [[None] * self.size.x for _ in range(self.size.z)]
+        self._fruits = []
+        self._fruits_limit = 2
 
     def set_plate_on(
             self,
@@ -101,6 +107,25 @@ class MapChunk:
         if position in self.size:
             return self.height_map[position.z][position.x]
         raise ValueError(f"{position} not in {self.size}")
+
+    @property
+    def get_fruit_count(self) -> int:
+        """Gets the number of fruits in the chunk."""
+        return len(self._fruits)
+
+    @property
+    def get_fruit_limit(self) -> int:
+        """Gets max amount of fruits in the chunk."""
+        return self._fruits_limit
+
+    def add_fruit(self, fruit) -> None:
+        """Adds a fruit to the chunk.
+        Args:
+            fruit (): The fruit to add.
+        """
+        if len(self._fruits) == self._fruits_limit:
+            raise
+        self._fruits.append(fruit)
 
     def __str__(self) -> str:
         """Returns a string representation of the chunk.
