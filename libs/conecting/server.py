@@ -274,6 +274,8 @@ class ServerConnector(SocConnector):
         for connect in self.external_connections:
             self.__send_to__(connect, self.server_close)
         for connect, _ in self.current_users:
+            if connect == "localhost":
+                continue
             self.__send_to__(connect, self.server_close)
 
         super().close()
