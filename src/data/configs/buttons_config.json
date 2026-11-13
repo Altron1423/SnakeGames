@@ -75,6 +75,18 @@
         }, "position": "<Recalc:<Vector2:0,0>/<Vector2:40,40>>", "size": "<Recalc:<Vector2:0,0>/<Vector2:200,60>>", "polygons_name": "interface_png", "png_name": "button_texture_4"}
       ]
     },
+    "download_screen": {
+      "data": {
+        "window_background": [230, 230, 230],
+        "cord_new_but": [0,0, 0,0, 0,0],
+        "default_polygonizer": "base_polygonizer"
+      },
+      "buttons": [
+        {"type": "button_png", "text": "Присоединиться", "triggers": {
+          "m1/u": "run_function:game/start_client_game"
+        }, "position": "<Recalc:<Vector2:0,0>/<Vector2:40,40>>", "size": "<Recalc:<Vector2:0,0>/<Vector2:200,60>>", "polygons_name": "interface_png", "png_name": "button_texture_4"}
+      ]
+    },
     "main_game_screen": {
       "data": {
         "window_background": [230, 230, 230],

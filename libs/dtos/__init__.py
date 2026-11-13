@@ -1,7 +1,7 @@
 from .save import *
 from .connects import (
     AddressConnectDTO, GameDataToServerDTO, GameDataToClientDTO,
-    ConnectServerDTO, ConnectClientDTO
+    ConnectServerDTO, ConnectClientDTO, ServerAssetsDTO
 )
 
 from .screen import (

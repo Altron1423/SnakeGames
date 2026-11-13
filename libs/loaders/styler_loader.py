@@ -21,13 +21,15 @@ class StylerLoader(Loader):
         Args:
             path (Path): The path to the file containing styler data.
         """
+        if not path.is_file():
+            return
         with path.open("r", encoding="utf-8") as file:
             json_data = json.load(file)
             if json_data["type"] == "styler":
                 json_data = json_data["styles"]
                 for name in json_data:
                     style = Styler.load_json(json_data[name])
-                    self.add(style, name)
+                    self.add(style, name, path)
 
     def get(self, name: str) -> Styler | None:
         """Retrieves a loaded styler by name.

@@ -1,11 +1,15 @@
 import json
+import struct
+from pathlib import Path
+
 import scapy.all as sc
 from libs import Version, loger
 from libs.dtos import AddressConnectDTO
 from socket import (
-    socket, gethostbyname, gethostname
+    socket, AF_INET, SOCK_DGRAM
 )
 
+CHUNK = 64 * 1024
 
 class AddressChecker:
     """Handles network address checking.
@@ -24,6 +28,13 @@ class AddressChecker:
         self.ip_mac_network = {}
 
     def start(self, output_info: bool = False) -> list:
+        return [
+            AddressConnectDTO(
+                ip=self.local_ip,
+            )
+        ]
+
+    def start_real(self, output_info: bool = False) -> list:
         """Starts the scanning of the network.
 
         Args:
@@ -106,6 +117,10 @@ class SocConnector:
     false_join_game: str = "JOIN_FALSE"
     game_status_message: str = "GAME_STATUS"
     server_close: str = "CLOSE"
+    get_server_assets: str = "GetServerAssets"
+    server_assets: str = "ServerAssets"
+    request_download_assets: str = "RequestDownloadAssets"
+    data_for_download_assets: str = "DataForDownloadAssets"
 
     def __init__(self, version: Version):
         """Initializes the SocConnector.
@@ -124,8 +139,13 @@ class SocConnector:
         Returns:
             str: The local IPv4 address.
         """
-        ip_l = gethostbyname(gethostname())
-        return ip_l
+        s = socket(AF_INET, SOCK_DGRAM)
+        try:
+            # connect() на UDP не отправляет пакеты — только выбирает маршрут
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]
+        finally:
+            s.close()
 
     def close(self):
         """Closes the main socket."""

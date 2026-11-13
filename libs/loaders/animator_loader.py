@@ -14,14 +14,16 @@ class AnimatorLoader(Loader):
 
 
     @classmethod
-    def load_from_dir(cls, path_map: Path) -> None:
+    def load_from_dir(cls, path_animator: Path) -> None:
         """Loads animators from a directory.
 
         Args:
-            path_map (Path): The directory containing animator files.
+            path_animator (Path): The directory containing animator files.
         """
-        entity_animator_loader.load_from_dir(path_map.joinpath("players"))
-        # entity_animator_loader.load_from_dir(path_map.joinpath("entities"))
+        if not path_animator.is_dir():
+            return
+        entity_animator_loader.load_from_dir(path_animator.joinpath("players"))
+        entity_animator_loader.load_from_dir(path_animator.joinpath("entities"))
 
 
 animator_loader = AnimatorLoader()

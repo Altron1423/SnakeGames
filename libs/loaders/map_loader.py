@@ -25,6 +25,8 @@ class MapLoader(Loader):
         Args:
             path_map (Path): The base directory containing subdirectories for each component.
         """
+        if not path_map.is_dir():
+            return
         map_plate_loader.load_from_dir(path_map.joinpath("plate"))
         map_chunk_loader.load_from_dir(path_map.joinpath("chunk"))
         map_block_loader.load_from_dir(path_map.joinpath("block"))

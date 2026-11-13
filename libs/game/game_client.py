@@ -12,6 +12,7 @@ from ..loaders import map_loader
 from ..math import Vector2
 from ..window.screen import Window
 from ..window.camera import Camera
+from ..loaders.entity_loader import player_loader
 
 L2 = 2 ** 0.5
 
@@ -51,12 +52,16 @@ class GameClient:
         self.player = ClientPlayer(player_name)
         self.ticker = MainTicker
 
-        path = Path.cwd()
-        path_map = path.joinpath("src/data/map")
-        path_animator = path.joinpath("src/data/animators")
+        path_proj = Path.cwd()
+        for dop_path in ("src/data", "dop_assets"):
+            path = path_proj / dop_path
+            path_map = path.joinpath("map")
+            path_animator = path.joinpath("animators")
+            path_player = path.joinpath("entities")
 
-        animator_loader.load_from_dir(path_animator)
-        map_loader.load_from_dir(path_map)
+            animator_loader.load_from_dir(path_animator)
+            map_loader.load_from_dir(path_map)
+            player_loader.load_from_dir(path_player)
 
         self.entities = {}
 

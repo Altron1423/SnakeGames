@@ -22,13 +22,15 @@ class ManyPolygonizerLoader(Loader):
         Args:
             path (Path): The path to the file containing many polygonizers data.
         """
+        if not path.is_file():
+            return
         with path.open("r", encoding="utf-8") as file:
             json_data = json.load(file)
             if json_data["type"] == "ManyPolygonizer":
                 json_data = json_data["many_polygonizers"]
                 for name in json_data:
                     many_polygon = ManyPolygonizer.load_json(json_data[name])
-                    self.add(many_polygon, name)
+                    self.add(many_polygon, name, path)
             else:
                 loger.log(f"Uncorrected Type {json_data['type']}. Need type: \"ManyPolygonizer\"")
 

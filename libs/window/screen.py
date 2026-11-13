@@ -281,31 +281,31 @@ class WindowManager:
 
     def load_windows(self):
         # path = self.main_screen.Application.path_map.joinpath("src/data/configs")
-        path = Path.cwd().joinpath("src/data/configs")
+        path_proj = Path.cwd()
+        for dop_path in ("src/data", "dop_assets"):
+            path = path_proj / dop_path / "configs"
+            loger.log(path)
 
-        loger.log(path)
-
-        StylerLoader.load(path.joinpath("styles_config.json"))
-
-        ImageLoader.load(path.joinpath("images_config.json"))
-
-        ManyPolygonizerLoader.load(path.joinpath("many_polygon_config.json"))
-
+            StylerLoader.load(path.joinpath("styles_config.json"))
+            ImageLoader.load(path.joinpath("images_config.json"))
+            ManyPolygonizerLoader.load(path.joinpath("many_polygon_config.json"))
 
 
-        with path.joinpath("buttons_config.json").open("r", encoding="utf-8") as f:
-            buttons_config = json.load(f)
+            buttons_config_path = path / "buttons_config.json"
+            if buttons_config_path.is_file():
+                with buttons_config_path.open("r", encoding="utf-8") as f:
+                    buttons_config = json.load(f)
 
-        loger.log(buttons_config)
+                loger.log(buttons_config)
 
-        if buttons_config["type"] == "interface_elements":
-            buttons_config = buttons_config["windows"]
-            for i_window in buttons_config:
-                w = buttons_config[i_window]
-                w["name"] = i_window
-                window = WindowMapper.dict_to_dto(w)
-                self.windows.append(Window(self, window, self.main_screen.screen_main))
-                self.windows_keys[i_window] = len(self.windows) - 1
+                if buttons_config["type"] == "interface_elements":
+                    buttons_config = buttons_config["windows"]
+                    for i_window in buttons_config:
+                        w = buttons_config[i_window]
+                        w["name"] = i_window
+                        window = WindowMapper.dict_to_dto(w)
+                        self.windows.append(Window(self, window, self.main_screen.screen_main))
+                        self.windows_keys[i_window] = len(self.windows) - 1
 
 
         loger.status(f"Load {len(self.windows)} windows")

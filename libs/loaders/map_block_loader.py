@@ -40,7 +40,7 @@ class MapBlockLoader(Loader):
                             ),
                             position
                         )
-                self.add(map_block, data.name)
+                self.add(map_block, data.name, path)
 
     def get(self, name: str) -> MapBlock | None:
         """Retrieves a loaded map block by name.

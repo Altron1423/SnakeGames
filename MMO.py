@@ -50,7 +50,7 @@ class App(Application):
         self.user_data = ConnectClientDTO(
             version=CORE.version,
             name="test",
-            password="123"
+            password=CORE.secret_code
         )
         self.save_manager.set_path_save(self.path.joinpath(CORE.saves_directory))
 
@@ -138,24 +138,39 @@ class App(Application):
                 address = i_server.address
                 break
         self.connector.connect(address)
-        connection = self.connector.join_game()
-        loger.log(connection)
-        if connection:
-            self.client_game = GameClient(self.user_data.name)
-            self.client_game.set_game_data(
-                self.connector.get_data_from_server,
-                self.connector.send_game_data,
-                self.window_manager.get_window("main_game_screen")
-            )
-            self.client_game.start()
-            self.run_game = True
-            self.open_game_screen()
+        self.client_game = GameClient(self.user_data.name)
+        result = self.connector.synchronization_server_assets()
+        if result is None:
+            connection = self.connector.join_game()
+            loger.log(connection)
+            if connection:
+                self.client_game.set_game_data(
+                    self.connector.get_data_from_server,
+                    self.connector.send_game_data,
+                    self.window_manager.get_window("main_game_screen")
+                )
+                self.client_game.start()
+                self.run_game = True
+                self.open_game_screen()
+            else:
+                self.open_game_menu()
         else:
-            self.open_game_menu()
+            loger.log("Nead download")
+            loger.log(result)
+            self.start_download(result["counts"], result["token"])
 
     def open_game_screen(self):
         self.window_manager.set_main_window("main_game_screen")
         self.window_manager.close_window("game_select")
+
+    def start_download(self, counts:int, token:str):
+        self.window_manager.set_main_window("download_screen")
+        self.window_manager.close_window("game_select")
+        loger.log("Start download")
+        input()
+        self.connector.load_new_assets(counts, token)
+        # self.main_screen.window_manager.load_windows()
+
 
     def leave_game(self, bat: Button=None):
         self.run_game = False

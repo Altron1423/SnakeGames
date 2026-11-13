@@ -20,6 +20,7 @@ class Core:
     saves_directory: Path
     logs_directory: Path
     mod_packs_directory: Path
+    secret_code: str
 
     def __init__(self):
         """Initializes the Core instance by loading settings from a JSON file.

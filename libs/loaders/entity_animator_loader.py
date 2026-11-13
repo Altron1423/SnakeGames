@@ -52,7 +52,7 @@ class EntityAnimatorLoader(Loader):
                     entity_animator.add_animation_pack(animation_pack_name, animation_pack)
 
                 entity_animator.set_default_size(data.size)
-                self.add(entity_animator, data.name)
+                self.add(entity_animator, data.name, path)
 
     def get(self, name: str) -> EntityAnimator | None:
         """Retrieves an entity animator by name.

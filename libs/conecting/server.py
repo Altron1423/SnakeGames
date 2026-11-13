@@ -1,10 +1,11 @@
+import asyncio
 from typing import Any, Generator, Callable
 import json
 
 from libs import loger, GameDataToClientMapper, GameDataToClientDTO
 
 from libs.dtos import (
-    ConnectServerDTO, ConnectClientDTO,
+    ConnectServerDTO, ConnectClientDTO, ServerAssetsDTO,
     GameDataToServerDTO,  
 )
 from libs.mappers import (
@@ -12,6 +13,8 @@ from libs.mappers import (
     ConnectClientMapper,
     GameDataToServerMapper
 )
+from libs.loaders import Loader
+from file_server.secure.create_token import CreateToken
 from . import SocConnector, User
 from socket import (
     socket,
@@ -90,6 +93,7 @@ class ServerConnector(SocConnector):
         if tick % 40 and self.access_external_connections:
             try:
                 new_socket, addr = self.main_socket.accept()
+                new_socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
                 # loger.log(f'New connect {addr=}, {new_socket=}')
                 new_socket.setblocking(False)
                 self.external_connections.append(new_socket)
@@ -112,29 +116,50 @@ class ServerConnector(SocConnector):
                         connect,
                         {self.true_server_testing: ConnectServerMapper.dto_to_dict(dto)},
                     )
+                elif data == self.get_server_assets:
+                    self.__send_to__(
+                        connect,
+                        {self.server_assets: list(Loader.get_load_data().keys())},
+                    )
                 elif data == self.drop_connect:
                     self.__drop_connect__(connect)
                     loger.log(f"drop connect")
                 else:
-                    data = data.get(self.join_in_game_message)
-                    if data is None:
-                        continue
-                    dto = ConnectClientMapper.dict_to_dto(data)
-                    if dto.version:
-                        user = self.__find_user__(dto.name)
-                        if user is None:
-                            user = self.__crate_user__(dto, connect)
-                            correct = True
-                        else:
-                            correct = user.test_password(dto.password)
+                    join_data = data.get(self.join_in_game_message)
+                    if join_data is not None:
+                        dto = ConnectClientMapper.dict_to_dto(join_data)
+                        if dto.version:
+                            user = self.__find_user__(dto.name)
+                            if user is None:
+                                user = self.__crate_user__(dto, connect)
+                                correct = True
+                            else:
+                                correct = user.test_password(dto.password)
 
-                        if correct:
-                            self.current_users.append((connect, user))
-                            self.external_connections.remove(connect)
-                            self.connect_player(user.name)
-                            self.__send_to__(connect, self.true_join_game)
-                        else:
-                            self.__send_to__(connect, self.false_join_game)
+                            if correct:
+                                self.current_users.append((connect, user))
+                                self.external_connections.remove(connect)
+                                self.connect_player(user.name)
+                                self.__send_to__(connect, self.true_join_game)
+                            else:
+                                self.__send_to__(connect, self.false_join_game)
+                    assets_data = data.get(self.request_download_assets)
+                    if assets_data is not None:
+                        assets = assets_data["absent_assets"]
+                        assets_path = [Loader.global_load_data[g] for g in assets]
+                        token: str = asyncio.run(
+                            CreateToken(
+                                assets_path,
+                            )
+                        )["access_token"]
+                        self.__send_to__(
+                            connect,
+                            {
+                                self.data_for_download_assets:
+                                    {"counts": len(assets_path), "token": token}
+                            }
+                        )
+
             except BlockingIOError:
                 pass
             except ConnectionAbortedError:

@@ -32,7 +32,7 @@ class DimensionLoader(Loader):
                     if map_block_loader.get(block_name):
                         dimension.add_using_block(block_name)
 
-                self.add(dimension, data.name)
+                self.add(dimension, data.name, path)
 
     def load_from_dir(self, path: Path) -> None:
         """Loads all dimensions from a directory.
@@ -40,6 +40,8 @@ class DimensionLoader(Loader):
         Args:
             path (Path): The directory containing dimension files.
         """
+        if not path.is_dir():
+            return
         for iPath in path.iterdir():
             loger.log(f"Loading {iPath}")
             self.load(iPath)

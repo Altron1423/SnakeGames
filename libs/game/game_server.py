@@ -34,9 +34,7 @@ class GameServer:
     def __init__(self):
         """Initializes the game server."""
         path = Path.cwd()
-        path_player = path.joinpath("src/data/entities")
 
-        player_loader.load_from_dir(path_player)
 
         loger.status("GameMain loaded complete")
 

@@ -25,7 +25,7 @@ class PlayerLoader(Loader):
                 dto = PlayerLoadMapper.dict_to_dto(json_data["data"])
                 player = Player.load_from_config(dto)
 
-                self.add(player, dto.race)
+                self.add(player, dto.race, path)
 
     def get(self, name: str) -> Player | None:
         """Retrieves a player by name.

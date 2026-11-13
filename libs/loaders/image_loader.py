@@ -18,13 +18,15 @@ class ImageLoader(Loader):
         Args:
             path (Path): The path to the file containing image information.
         """
+        if not path.is_file():
+            return
         with path.open("r", encoding="utf-8") as file:
             json_data = json.load(file)
             if json_data["type"] == "image":
                 json_data = json_data["images"]
                 for name in json_data:
                     image = [None, json_data[name]]
-                    self.add(image, name)
+                    self.add(image, name, path)
 
     def get(self, name: str) -> pg.Surface | None:
         """Retrieves an image by name.

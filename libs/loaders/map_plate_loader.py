@@ -30,7 +30,7 @@ class MapPlateLoader(Loader):
                 map_plate.changeable = data.changeable
                 map_plate.layer = data.layer
 
-                self.add(map_plate, data.name)
+                self.add(map_plate, data.name, path)
 
     def get(self, name: str) -> MapPlate | None:
         """Retrieves a loaded map plate by name.

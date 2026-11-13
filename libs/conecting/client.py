@@ -1,6 +1,9 @@
 import time
+from pathlib import Path
+
+import requests
 from typing import Any, Generator
-from libs import loger
+from libs import loger, Loader
 from libs.dtos import (
     AddressConnectDTO, ConnectServerDTO, ConnectClientDTO,
     GameDataToServerDTO, GameDataToClientDTO
@@ -12,6 +15,8 @@ from . import SocConnector
 from socket import (
     socket, AF_INET, SOCK_STREAM, IPPROTO_TCP, TCP_NODELAY
 )
+
+from libs.file_works.save_assets import save_file
 
 
 class ClientConnector(SocConnector):
@@ -93,6 +98,30 @@ class ClientConnector(SocConnector):
         except OSError:
             pass
         super().close()
+
+    def synchronization_server_assets(self) -> str | None:
+        self.__send__(self.get_server_assets)
+        raw_server_answer: str | dict | None = self.decode_message(
+            self.__receive__()
+        )
+        server_answer = raw_server_answer.get(self.server_assets)
+        if server_answer is not None:
+            absent_assets = set(server_answer) - set(Loader.global_load_data.keys())
+
+            loger.log(absent_assets)
+            if len(absent_assets) > 0:
+                self.__send__({
+                    self.request_download_assets: {
+                        "absent_assets": list(absent_assets)
+                    }
+                })
+                raw_server_answer: str | dict | None = self.decode_message(
+                    self.__receive__(), string=True
+                )
+                loger.log(raw_server_answer)
+                server_answer = raw_server_answer.get(self.data_for_download_assets)
+                return server_answer
+        return None
 
     def get_data_from_server(self) -> Generator[GameDataToClientDTO, Any, None]:
         """Generator for data received from the server.
@@ -184,3 +213,14 @@ class ClientConnector(SocConnector):
             loger.error("OSError")
 
         return answer
+
+    def load_new_assets(self, counts: int, token: str) -> None:
+        cookies = {"access_token": token}
+        url = f"http://{self.main_socket.getpeername()[0]}:{10001}/api/download_files/{{}}"
+        user_agent = {"User-Agent": "Mozilla/5.0"}
+
+        target_dir = Path().cwd() / "dop_assets"
+        for i in range(counts):
+            loger.log(f"Progress: {i + 1}/{counts}")
+            request = requests.get(url.format(i), headers=user_agent, cookies=cookies)
+            save_file(target_dir, request)

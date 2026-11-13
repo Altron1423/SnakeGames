@@ -34,6 +34,11 @@ class ConnectServerDTO:
 
 
 @dataclass
+class ServerAssetsDTO:
+    using_assets: list[str]
+
+
+@dataclass
 class ConnectClientDTO:
     """Data Transfer Object for client connection information.
 

@@ -39,7 +39,7 @@ class MapChunkLoader(Loader):
                         position
                     )
 
-                self.add(map_chunk, data.name)
+                self.add(map_chunk, data.name, path)
 
     def get(self, name: str) -> MapChunk | None:
         """Retrieves a loaded map chunk by name.
