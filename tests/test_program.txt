@@ -1,0 +1,15 @@
+import os
+Right()
+Left()
+
+TypeBlock()
+   # переменные
+Wool # Стена
+Grass # Трава
+Fruit # Фрукт
+
+# Условие
+if TypeBlock() == Wool:
+    Right()
+
+exec(print(1))

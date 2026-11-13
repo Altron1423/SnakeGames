@@ -1,0 +1,19 @@
+
+Grass = 0
+Wool = 1
+Fruit = 2
+
+def run(snake, map):
+     os
+    snake.Right()
+    return
+    snake.Left()
+    return
+    map.TypeBlock()
+    Wool
+    Grass
+    Fruit
+    if map.TypeBlock() == Wool:
+        snake.Right()
+        return
+    (print(1))
