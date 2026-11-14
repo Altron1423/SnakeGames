@@ -5,9 +5,7 @@ Fruit = 3
 
 def run(snake, map):
     p = map.PosInfo(0, 1)
-    print(p)
-    print(p == Grass)
-    if map.PosInfo(0, 1) == Wall:
+    if map.PosInfo(0, 1) == Wall and map.PosInfo(1, 0) != Wall:
         snake.Right()
         return
     ...

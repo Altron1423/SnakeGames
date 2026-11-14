@@ -111,7 +111,12 @@
 
         {"type": "button", "text": "Призыв", "triggers": {
           "r/d": "run_function:test/action_1"
-        }, "polygons_name": "interface", "png_name": null}
+        }, "polygons_name": "interface", "png_name": null},
+
+        {"type": "button", "text": "Пауза", "triggers": {
+          "p/d":  "run_function:game/pause",
+          "m1/u": "run_function:game/pause"
+        }, "position": "<Recalc:<Vector2:0,0>/<Vector2:150,40>>", "size": "<Recalc:<Vector2:0,0>/<Vector2:100,60>>", "polygons_name": "interface", "png_name": null}
       ]
     }
   }

@@ -1,3 +1,4 @@
+from libs import PLATE_SIZE
 from libs.dtos import ClientPlayerDTO, GameDataToServerDTO, GameDataToClientDTO, PlayerLoadDTO
 # from libs.game.sub_classes import Inventory
 from libs.math import Position2
@@ -10,11 +11,15 @@ class Player(Entity):
     Inherits from the Entity class and includes player-specific properties like inventory.
     """
     entity_type: str = "Player"
+    was_selected: bool = False
+    free_moving: bool = False
+    last_game_tick: int = 0
     # inventory: Inventory
 
     def __init__(self):
         """Initializes a new Player instance."""
         super().__init__()
+        self.speed = PLATE_SIZE
         # self.inventory = Inventory()
 
     def set_default(self, name: str, spawn_position: Position2):
@@ -33,17 +38,26 @@ class Player(Entity):
         Args:
             dto (GameDataToServerDTO): The data received from the client.
         """
-        if abs(dto.move.x) + abs(dto.move.z) <= 2.2:
+        if abs(dto.move.x) + abs(dto.move.z) <= 2.2 and dto.action == "select" and not self.was_selected:
             self.orientation = dto.move
+            self.was_selected = True
 
-    def get_data_for_client(self) -> GameDataToClientDTO:
+    def update(self, game_tick: int):
+        if self.last_game_tick != game_tick:
+            self.was_selected = False
+            self.last_game_tick = game_tick
+            move_data = self.__move_plate__()
+            if move_data[0] == 1:
+                self.add_xp(move_data[1].scored)
+
+    def get_data_for_client(self, game_tick) -> GameDataToClientDTO:
         """Prepares player data for transmission to the client.
 
         Returns:
             GameDataToClientDTO: The DTO containing player-related data.
         """
         dto = GameDataToClientDTO(
-            game_tick=0,
+            game_tick=game_tick,
             map_block="",
             entities=self.map_block.get_entity_dto(),
             player=self.__player_data__,

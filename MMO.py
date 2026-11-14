@@ -35,7 +35,8 @@ class App(Application):
             "start_server_game": [self.start_server_game, None],
             "start_client_game": [self.start_client_game, None],
             "leave_game": [self.leave_game, None],
-            "moving_to": [self.moving_to, None]
+            "moving_to": [self.moving_to, None],
+            "pause": [self.pause, None],
         }
         test = {
             "test_function": [lambda bat: print(bat), None],
@@ -192,6 +193,10 @@ class App(Application):
     def action_1(self, bat: Button=None):
         if self.client_game is not None:
             self.client_game.action_1()
+
+    def pause(self, bat: Button=None):
+        if self.client_game is not None:
+            self.client_game.pause()
 
     def exit(self, _=None):
         if self.connector:

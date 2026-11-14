@@ -112,7 +112,7 @@ class MapBlock:
             ValueError: If the position is not within the block's size.
         """
         if position in self.size:
-            return self.form[position.z][position.x]
+            return self.form[int(position.z)][int(position.x)]
         raise ValueError(f"{position} not in {self.size}")
 
     def update(self):

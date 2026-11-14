@@ -29,6 +29,7 @@ class GameClient:
     """
     camera: Camera
     ticker: Ticker
+    game_tick: int
 
     ai_worker: AIWorker
 
@@ -51,6 +52,7 @@ class GameClient:
         """
         self.player = ClientPlayer(player_name)
         self.ticker = MainTicker
+        self.game_tick = 0
         self.ai_worker = AIWorker(self.player)
 
         path_proj = Path.cwd()
@@ -155,10 +157,7 @@ class GameClient:
         """The main game loop iteration.
         """
         if self.ticker % 2:
-            if self.player.map_block is not None:
-                self.ai_worker.run()
             dto = self.player.data_to_server()
-
             dto.action = self.action
             self.action = None
 
@@ -167,6 +166,11 @@ class GameClient:
             for act in self.get_data_from_server():
                 self.player.get_data_from_server(act.player)
                 self.update_entities(act.entities)
+                if act.game_tick > self.game_tick:
+                    if self.player.map_block is not None:
+                        self.ai_worker.run()
+                        self.action = "select"
+                        self.game_tick = act.game_tick
                 # self.camera.entities = act.entities
                 # if len(act.entities) > 1:
                 #     print(act.entities[1:])
@@ -176,3 +180,7 @@ class GameClient:
     def action_1(self):
         """Example action handler."""
         self.action = "1"
+
+    def pause(self):
+        """Example action handler."""
+        self.action = "re_pause"

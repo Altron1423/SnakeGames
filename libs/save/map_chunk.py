@@ -86,7 +86,7 @@ class MapChunk:
             ValueError: If the position is not within the chunk's size.
         """
         if position in self.size:
-            return self.map[position.z][position.x]
+            return self.map[int(position.z)][int(position.x)]
         raise ValueError(f"{position} not in {self.size}")
 
     def get_height(
@@ -105,7 +105,7 @@ class MapChunk:
             ValueError: If the position is not within the chunk's size.
         """
         if position in self.size:
-            return self.height_map[position.z][position.x]
+            return self.height_map[int(position.z)][int(position.x)]
         raise ValueError(f"{position} not in {self.size}")
 
     @property

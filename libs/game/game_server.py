@@ -1,6 +1,8 @@
-from pathlib import Path
 from typing import Callable, Generator, Any
 
+from libs import PLATE_SIZE
+from libs.ticker import Ticker, MainTicker
+from libs.math import Position2
 from . import GameStartException
 from libs.save import SaveFull
 from libs.generators import SaveCreateTest
@@ -30,16 +32,18 @@ class GameServer:
     send_to_user: Callable[[GameDataToClientDTO, str], None]
     load_players: dict[str, Player]
     players_in_game: dict[str, Player]
+    ticker: Ticker
+    game_tick: int
+    pause: bool
 
     def __init__(self):
         """Initializes the game server."""
-        path = Path.cwd()
-
-
-        loger.status("GameMain loaded complete")
-
         self.load_players = {}
         self.players_in_game = {}
+        self.ticker = MainTicker
+        self.game_tick = 0
+        self.pause = True
+        loger.status("GameMain loaded complete")
 
     def set_game_data(
             self, save_full: SaveFull,
@@ -79,7 +83,7 @@ class GameServer:
         """
         player = player_loader.get_new("human")
         player.transition_to(self.save.spawn_map_block)
-        player.set_default(name, self.save.spawn_position)
+        player.set_default(name, self.save.spawn_position + Position2(PLATE_SIZE, PLATE_SIZE) // 2)
         self.load_players[name] = player
         return player
 
@@ -122,21 +126,25 @@ class GameServer:
 
     def main(self):
         """The main server loop iteration."""
+        if self.ticker % 180 and not self.pause:
+            self.game_tick += 1
         for act, user_name in self.get_user_action():
             player = self.players_in_game[user_name]
             # loger.log(f"Server {user_name=} act.move={act.move}")
 
             player.set_changes_from_client(act)
-            player.update()
-            # if player.name != "test_client":
-            #     print(player.get_near_entity(100))
-            if act.action == "1":
+            if not self.pause:
+                player.update(self.game_tick)
+            if act.action == "re_pause":
+                self.pause = not self.pause
+            elif act.action == "1":
                 self.summon_enemyTESTING(player)
 
             self.send_to_user(
-                player.get_data_for_client(),
+                player.get_data_for_client(self.game_tick),
                 user_name
             )
+
         self.save.update()
 
     def saving(self):

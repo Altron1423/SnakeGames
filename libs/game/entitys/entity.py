@@ -41,6 +41,7 @@ class Entity:
     orientation: Vector2
     speed_control: float
     speed: float
+    free_moving: bool = True
 
     collision: Vector2
     step_height: int
@@ -50,9 +51,6 @@ class Entity:
         self.name = None
         self.id = Entity.id_was_created
         Entity.id_was_created += 1
-        self.race = None
-        self.health = ProgressBar()
-        self.mana = ProgressBar()
 
         self.xp = ProgressBar(unlimit=True)
         self.xp.set_triggers(TriggersDTO(
@@ -135,11 +133,28 @@ class Entity:
 
     def __move__(self):
         """Handles entity movement and collision detection."""
-        self.__move_free__()
+        if self.free_moving:
+            self.__move_free__()
 
-    def __move_plate__(self):
-        """Движение строго поклеткам"""
-        ...
+    def __move_plate__(self) -> tuple[int, Entity | None]:
+        """Движение строго по клеткам"""
+        move_on = self.orientation * self.speed
+        _, start_plate, start_heigh = self.__get_info_positon__(self.position)
+        new_position = self.position + move_on
+        _, new_plate, new_heigh = self.__get_info_positon__(new_position)
+        if not new_position in self.map_block.size_coordinate:
+            return -1, None
+        if abs(new_heigh - start_heigh) > self.step_height:
+            return -1, None
+        for entity in new_plate.entities:
+            if entity.entity_type == "Player":
+                return -1, None
+            elif entity.entity_type == "Fruit":
+                return 1, entity
+
+        self.position = new_position
+        return 0, None
+
 
     def __move_free__(self):
         """Свободно движение без привязки к сетке клеток"""
