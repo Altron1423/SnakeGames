@@ -10,9 +10,9 @@ class ClientPlayer(Player):
     Inherits from the Player class and provides client-side logic such as
     handling server updates and preparing data for transmission.
     """
+    entity_type: str = "ClientPlayer"
     raw_orientation: Vector2
     map_block_name: str
-    target_position: Position2
     last_direction_view: str
 
     def __init__(self, player_name: str):
@@ -24,7 +24,6 @@ class ClientPlayer(Player):
         super().__init__()
         self.raw_orientation = Vector2(0, 0)
         self.player_name = player_name
-        self.target_position = Position2()
         self.last_direction_view = 'down'
 
     def preferential_orientation(self) -> str:
@@ -44,8 +43,6 @@ class ClientPlayer(Player):
         self.name = dto.name
         self.id = dto.id
         self.position = dto.position
-        self.health = dto.health
-        self.mana = dto.mana
         self.xp = dto.xp
         self.lvl = dto.lvl
         self.map_block = map_block_loader.get(dto.map_block)
@@ -57,9 +54,8 @@ class ClientPlayer(Player):
             GameDataToServerDTO: The DTO containing player data.
         """
         return GameDataToServerDTO(
+            game_tick=0,
             move=self.orientation,
-            speed=1.0,
-            target_position=self.target_position,
             action=None
         )
 

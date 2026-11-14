@@ -107,9 +107,8 @@ class GameDataToServerMapper:
             dict[str, str]: A dictionary representation of the game data.
         """
         return {
+            "game_tick": dto.game_tick,
             "move": str(dto.move),
-            "speed": dto.speed,
-            "target_position": str(dto.target_position),
             "action": dto.action
         }
 
@@ -124,9 +123,8 @@ class GameDataToServerMapper:
             GameDataToServerDTO: The reconstructed GameDataToServerDTO.
         """
         return GameDataToServerDTO(
+            game_tick=data["game_tick"],
             move=Vector2(data["move"]),
-            speed=data["speed"],
-            target_position=Position2(data["target_position"]),
             action=data["action"]
         )
 
@@ -139,7 +137,7 @@ class GameDataToClientMapper:
     """
 
     @staticmethod
-    def dto_to_dict(dto: GameDataToClientDTO) -> dict[str, str | list | dict]:
+    def dto_to_dict(dto: GameDataToClientDTO) -> dict[str, int | str | list | dict]:
         """Converts a GameDataToClientDTO to a dictionary.
 
         Args:
@@ -149,6 +147,7 @@ class GameDataToClientMapper:
             dict[str, str]: A dictionary representation of the game data.
         """
         return {
+            "game_tick": dto.game_tick,
             "map_block": dto.map_block,
             "entities": [EntityToClientMapper.dto_to_dict(g) for g in dto.entities],
             "player": ClientPlayerMapper.dto_to_dict(dto.player),
@@ -167,6 +166,7 @@ class GameDataToClientMapper:
             GameDataToClientDTO: The reconstructed GameDataToClientDTO.
         """
         return GameDataToClientDTO(
+            game_tick=data["game_tick"],
             map_block=data["map_block"],
             entities=[EntityToClientMapper.dict_to_dto(g) for g in data["entities"]],
             player=ClientPlayerMapper.dict_to_dto(data["player"]),

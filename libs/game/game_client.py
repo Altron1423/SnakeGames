@@ -1,9 +1,7 @@
 from pathlib import Path
-
-import pygame as pg
-
 from typing import Callable, Generator, Any
 
+from .AI_worker import AIWorker
 from .entitys import ClientPlayer, ClientEnemy
 from .. import GameDataToClientDTO, GameDataToServerDTO, loger
 from ..ticker import Ticker, MainTicker
@@ -32,6 +30,8 @@ class GameClient:
     camera: Camera
     ticker: Ticker
 
+    ai_worker: AIWorker
+
     get_data_from_server:  Callable[
         [], Generator[GameDataToClientDTO, Any, None]
     ]
@@ -51,6 +51,7 @@ class GameClient:
         """
         self.player = ClientPlayer(player_name)
         self.ticker = MainTicker
+        self.ai_worker = AIWorker(self.player)
 
         path_proj = Path.cwd()
         for dop_path in ("src/data", "dop_assets"):
@@ -154,6 +155,8 @@ class GameClient:
         """The main game loop iteration.
         """
         if self.ticker % 2:
+            if self.player.map_block is not None:
+                self.ai_worker.run()
             dto = self.player.data_to_server()
 
             dto.action = self.action

@@ -27,22 +27,16 @@ class ClientPlayerDTO:
     Attributes:
         name (str): Name of the player.
         id (int): Unique identifier of the player.
-        attributes (dict[str, list[int | float]] | None): Player attributes.
         position (Position2): Current position of the player.
-        health ("ProgressBar"): Health status.
-        mana ("ProgressBar"): Mana status.
         xp ("ProgressBar"): Experience status.
         lvl (int): Player level.
-        inventory (str): Inventory identifier.
+        # inventory (str): Inventory identifier.
         map_block (str): Map block identifier.
     """
     name: str
     id: int
-    attributes: dict[str, list[int | float]] | None
     position: Position2
-    health: "ProgressBar"
-    mana: "ProgressBar"
     xp: "ProgressBar"
     lvl: int
-    inventory: str
+    # inventory: str
     map_block: str

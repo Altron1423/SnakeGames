@@ -8,8 +8,9 @@ Wool # Стена
 Grass # Трава
 Fruit # Фрукт
 
+snake = "TOP"
 # Условие
-if TypeBlock() == Wool:
+if TypeBlock(0, 1) == Wool:
     Right()
 
 exec(print(1))

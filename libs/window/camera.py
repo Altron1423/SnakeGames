@@ -1,7 +1,7 @@
 import pygame as pg
 
 from .screen import Window
-from .. import MapPlate
+from .. import MapPlate, PLATE_SIZE
 from ..game import ClientEnemy
 from libs.animator_controller.entity_animator import EntityAnimator
 from ..loaders.image_loader import image_loader
@@ -341,7 +341,7 @@ class Camera:
         self.count_plate_height = self.surface_size.z // plate_size + 1
         self.window_plate_size = Size2(self.count_plate_width, self.count_plate_height)
         self.window_plate_size_range = self.window_plate_size + 2
-        self.scale = self.plate_size.x / 50
+        self.scale = self.plate_size.x / PLATE_SIZE
         self.center_pos = self.window_plate_size // 2
 
         self.player_animator.set_scale(self.scale)

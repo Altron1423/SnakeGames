@@ -5,7 +5,6 @@ such as dictionaries, for different parts of the game.
 """
 from .save import SaveMapper
 
-from .entity import AttributeLayerEntityMapper
 from .player import ClientPlayerMapper
 from .connects import ConnectServerMapper, ConnectClientMapper, GameDataToServerMapper, GameDataToClientMapper
 from .animator import AnimatorDataMapper

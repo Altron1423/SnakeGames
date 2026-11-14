@@ -1,5 +1,7 @@
 from libs.math import Position2
 
+PLATE_SIZE = 50
+
 class MapPlate:
     """Represents a plate in a map chunk.
 

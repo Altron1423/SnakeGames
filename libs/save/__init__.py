@@ -1,6 +1,6 @@
 from .exceptions import *
 
-from .map_plate import MapPlate
+from .map_plate import MapPlate, PLATE_SIZE
 from .map_chunk import MapChunk
 from .map_block import MapBlock
 from .dimension import Dimension

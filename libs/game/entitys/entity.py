@@ -1,5 +1,5 @@
-from libs import MapBlock, MapPlate, EntityToClientDTO
-from libs.game.sub_classes import Attributer, ProgressBar
+from libs import MapBlock, MapPlate, PLATE_SIZE, EntityToClientDTO
+from libs.game.sub_classes import ProgressBar
 from libs.game.sub_classes.progress_bar import TriggersDTO
 from libs.math import Position2, Vector2
 
@@ -26,14 +26,10 @@ class Entity:
     Contains common properties and behaviors for any entity, such as position,
     health, mana, and movement logic.
     """
+    entity_type: str = "Entity"
     name: None | str
     id: int
     id_was_created: int = 0
-    race: None | str
-
-    attributes: Attributer
-    health: ProgressBar
-    mana: ProgressBar
 
     xp: ProgressBar
     raising_xp: float
@@ -55,7 +51,6 @@ class Entity:
         self.id = Entity.id_was_created
         Entity.id_was_created += 1
         self.race = None
-        self.attributes = Attributer()
         self.health = ProgressBar()
         self.mana = ProgressBar()
 
@@ -86,8 +81,6 @@ class Entity:
 
     def update(self):
         """Updates the entity's state, including attributes and movement."""
-        self.attributes.update()
-        self.speed = 6 + self.attributes.agility // 3
         self.__move__()
 
     def transition_to(self, map_block: MapBlock):
@@ -118,7 +111,6 @@ class Entity:
             self.name,
             self.id,
             self.position,
-            self.health,
             self.orientation,
             "idle"
         )
@@ -135,7 +127,6 @@ class Entity:
         """
         entity = cls()
         entity.race = dto.race
-        entity.attributes.load(dto.attributes)
         entity.xp.set_limit(dto.to_first_lvlup)
         entity.raising_xp = dto.raising_xp
         entity.xp_boost = dto.xp_boost
@@ -144,6 +135,14 @@ class Entity:
 
     def __move__(self):
         """Handles entity movement and collision detection."""
+        self.__move_free__()
+
+    def __move_plate__(self):
+        """Движение строго поклеткам"""
+        ...
+
+    def __move_free__(self):
+        """Свободно движение без привязки к сетке клеток"""
         move_on = self.orientation * self.speed * self.speed_control
         _, start_plate, start_heigh = self.__get_info_positon__(self.position)
         for i in (Vector2(1, 0), Vector2(0, 1)):
@@ -173,7 +172,7 @@ class Entity:
                     break
             self.position += move_on_1d
 
-    def __get_info_positon__(self, pos: Position2 = None) -> tuple[Position2, MapPlate, int]:
+    def __get_info_positon__(self, pos: Position2 = None) -> tuple[Position2 | Vector2, MapPlate, int]:
         """Helper method to get position info relative to the map structure.
 
         Args:
@@ -185,12 +184,8 @@ class Entity:
         """
         if pos is None:
             pos = self.position
-        plate_size = 50
-        position_in_plate = pos // plate_size
-        position_chunk = position_in_plate // 16
-        position_plate = position_in_plate % 16
-        chunk = self.map_block.get_chunk(position_chunk)
-        return position_in_plate * plate_size, chunk.get_plate(position_plate), chunk.get_height(position_plate)
+        plate_position, map_plate, height = self.map_block.get_info_positon(pos)
+        return plate_position * PLATE_SIZE, map_plate, height
 
     def __lvl_up__(self) -> None:
         """Handles the level up process when enough XP is gathered."""
@@ -208,10 +203,6 @@ class Entity:
         """
         to = self.__class__()
         to.name = self.name
-        to.race = self.race
-        to.attributes = self.attributes
-        to.health = self.health.__copy__()
-        to.mana = self.mana.__copy__()
         to.xp = self.xp.__copy__()
         to.raising_xp = self.raising_xp
         to.lvl = self.lvl

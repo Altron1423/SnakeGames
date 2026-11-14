@@ -1,7 +1,7 @@
 
-Grass = 0
-Wool = 1
-Fruit = 2
+Grass = 1
+Wool = 2
+Fruit = 3
 
 def run(snake, map):
      os
@@ -13,7 +13,8 @@ def run(snake, map):
     Wool
     Grass
     Fruit
-    if map.TypeBlock() == Wool:
+    snake_u = "TOP"
+    if map.TypeBlock(0, 1) == Wool:
         snake.Right()
         return
     (print(1))

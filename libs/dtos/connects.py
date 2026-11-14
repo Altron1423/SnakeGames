@@ -59,12 +59,10 @@ class GameDataToServerDTO:
     Attributes:
         move (Vector2): Movement vector.
         speed (float): Current speed.
-        target_position (Position2): Target position.
         action (str | None): Current action being performed. Defaults to None.
     """
+    game_tick: int
     move: Vector2
-    speed: float
-    target_position: Position2
     action: str | None = None
 
 
@@ -79,6 +77,7 @@ class GameDataToClientDTO:
         chunk_position (Position2): Position of the chunk.
         position (Position2): Position of the entity.
     """
+    game_tick: int
     map_block: str
     entities: list[EntityToClientDTO]
     player: ClientPlayerDTO

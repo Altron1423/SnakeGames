@@ -6,4 +6,5 @@ class Enemy(Entity):
 
     Inherits from the Entity class.
     """
+    entity_type: str = "Enemy"
     ...

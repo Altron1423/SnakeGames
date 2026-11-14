@@ -1,5 +1,6 @@
 from libs.save.map_chunk import MapChunk
-from libs.math import Size2, Position2
+from libs.save.map_plate import MapPlate, PLATE_SIZE
+from libs.math import Size2, Position2, Vector2
 from libs.dtos.entity import EntityToClientDTO
 
 from random import randint
@@ -24,6 +25,7 @@ class MapBlock:
     id: int = 1
 
     size: Size2
+    size_chunk: Size2 | None
     size_coordinate: Size2
     position: Position2
     name: str
@@ -48,7 +50,7 @@ class MapBlock:
             name (str): The name of the block.
         """
         self.size = size
-        self.size_coordinate = size * 50 * 16
+        self.size_chunk = None
         self.name = name
         self.position = Position2()
         self.id = 0
@@ -83,6 +85,14 @@ class MapBlock:
             chunk (MapChunk | None): The chunk to set.
             position (Position2): The position within the block.
         """
+        if chunk is None:
+            return
+        if self.size_chunk is None:
+            self.size_chunk = chunk.size
+            self.size_coordinate = self.size * PLATE_SIZE * chunk.size
+        elif self.size_chunk != chunk.size:
+            raise
+
         if position in self.size:
             self.form[position.z][position.x] = chunk
 
@@ -208,6 +218,21 @@ class MapBlock:
                 # self.add_enemy(fruit)
                 break
 
+    def get_info_positon(
+            self,
+            abs_position:       Position2 | None = None,
+            abs_plate_position: Position2 | None = None,
+    ) -> tuple[Position2 | Vector2, MapPlate, int] | None:
+        if abs_plate_position is None:
+            if abs_position is None:
+                return None
+            abs_plate_position = abs_position // PLATE_SIZE
+
+        chunk_position: Position2 = abs_plate_position // 16
+        plate_position: Position2 = abs_plate_position % 16
+        chunk = self.get_chunk(chunk_position)
+        return abs_plate_position, chunk.get_plate(plate_position), chunk.get_height(plate_position)
+
     @property
     def Size(self):
         """Size2: The size of the map block."""
@@ -217,7 +242,7 @@ class MapBlock:
     def Size(self, size: Size2):
         """Sets the size of the map block."""
         self.size = size
-        self.size_coordinate = size * 50
+        self.size_coordinate = size * PLATE_SIZE
 
     @property
     def Name(self):

@@ -72,13 +72,10 @@ class ClientPlayerMapper:
         return {
             "name": dto.name,
             "id": dto.id,
-            "attributes": dto.attributes,
             "position": str(dto.position),
-            "health": str(dto.health),
-            "mana": str(dto.mana),
             "xp": str(dto.xp),
             "lvl": dto.lvl,
-            "inventory": str(dto.inventory),
+            # "inventory": str(dto.inventory),
             "map_block": dto.map_block
         }
 
@@ -96,12 +93,9 @@ class ClientPlayerMapper:
         return ClientPlayerDTO(
             name=data["name"],
             id=data["id"],
-            attributes=data["attributes"],
             position=Position2(data["position"]),
-            health=ProgressBar.init_from_str(data["health"]),
-            mana=ProgressBar.init_from_str(data["mana"]),
             xp=ProgressBar.init_from_str(data["xp"]),
             lvl=data["lvl"],
-            inventory=data["inventory"],
+            # inventory=data["inventory"],
             map_block=data["map_block"],
         )

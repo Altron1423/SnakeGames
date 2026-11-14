@@ -10,6 +10,7 @@ class ClientEnemy(Enemy):
     Inherits from the Enemy class and provides client-side logic such as
     animation and orientation-based action names.
     """
+    entity_type: str = "ClientEnemy"
     map_block_name: str
     target_position: Position2
     scaled_collision: Vector2

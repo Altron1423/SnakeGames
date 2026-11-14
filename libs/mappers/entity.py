@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from libs.dtos import AttributeLayerEntityDTO, EntityToClientDTO
+from libs.dtos import EntityToClientDTO
 from libs.math import Position2, Vector2
 
 
@@ -26,7 +26,6 @@ class EntityToClientMapper:
             "name": dto.name,
             "id": dto.id,
             "position": str(dto.position),
-            "health": str(dto.health),
             "orientation": str(dto.orientation),
             "visual_action": dto.visual_action
         }
@@ -46,56 +45,7 @@ class EntityToClientMapper:
             name=data["name"],
             id=data["id"],
             position=Position2(data["position"]),
-            health=ProgressBar.init_from_str(data["health"]),
             orientation=Vector2(data["orientation"]),
             visual_action=data["visual_action"]
         )
-
-
-@dataclass(frozen=True, slots=True)
-class AttributeLayerEntityMapper:
-    """Mapper for attribute layer entity data.
-
-    This class provides static methods to convert between AttributeLayerEntityDTO
-    and list representations.
-    """
-
-    @staticmethod
-    def dto_to_list(dto: AttributeLayerEntityDTO) -> list[int | float]:
-        """Converts an AttributeLayerEntityDTO to a list.
-
-        Args:
-            dto (AttributeLayerEntityDTO): The attribute layer entity data DTO.
-
-        Returns:
-            list[int | float]: A list representation of the attribute data.
-        """
-        return [
-            dto.constitution, dto.agility,
-            dto.defense, dto.strength,
-            dto.intellect, dto.spirit,
-            dto.health_reg, dto.max_mana
-        ]
-
-    @staticmethod
-    def list_to_dto(data: list) -> AttributeLayerEntityDTO:
-        """Converts a list to an AttributeLayerEntityDTO.
-
-        Args:
-            data (list): The list containing attribute data.
-
-        Returns:
-            AttributeLayerEntityDTO: The reconstructed AttributeLayerEntityDTO.
-        """
-        return AttributeLayerEntityDTO(
-            constitution=data[0],
-            agility=data[1],
-            defense=data[2],
-            strength=data[3],
-            intellect=data[4],
-            spirit=data[5],
-            health_reg=data[6],
-            max_mana=data[7]
-        )
-
 

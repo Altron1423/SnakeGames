@@ -62,10 +62,12 @@ class App(Application):
         if self.run_game:
             try:
                 self.connector.main(self.tick)
-            except AttributeError:
+            except AttributeError as e:
+                loger.error(e)
                 self.leave_game()
                 return
-            except ConnectionResetError:
+            except ConnectionResetError as e:
+                loger.error(e)
                 self.leave_game()
                 return
             if self.server_game is not None:
@@ -169,6 +171,7 @@ class App(Application):
         loger.log("Start download")
         input()
         self.connector.load_new_assets(counts, token)
+        self.start_client_game()
         # self.main_screen.window_manager.load_windows()
 
 

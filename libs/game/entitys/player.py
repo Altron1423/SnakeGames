@@ -1,5 +1,5 @@
 from libs.dtos import ClientPlayerDTO, GameDataToServerDTO, GameDataToClientDTO, PlayerLoadDTO
-from libs.game.sub_classes import Inventory
+# from libs.game.sub_classes import Inventory
 from libs.math import Position2
 from .entity import Entity
 
@@ -9,12 +9,13 @@ class Player(Entity):
 
     Inherits from the Entity class and includes player-specific properties like inventory.
     """
-    inventory: Inventory
+    entity_type: str = "Player"
+    # inventory: Inventory
 
     def __init__(self):
         """Initializes a new Player instance."""
         super().__init__()
-        self.inventory = Inventory()
+        # self.inventory = Inventory()
 
     def set_default(self, name: str, spawn_position: Position2):
         """Sets the initial name and spawn position for the player.
@@ -34,7 +35,6 @@ class Player(Entity):
         """
         if abs(dto.move.x) + abs(dto.move.z) <= 2.2:
             self.orientation = dto.move
-        self.speed_control = dto.speed
 
     def get_data_for_client(self) -> GameDataToClientDTO:
         """Prepares player data for transmission to the client.
@@ -43,6 +43,7 @@ class Player(Entity):
             GameDataToClientDTO: The DTO containing player-related data.
         """
         dto = GameDataToClientDTO(
+            game_tick=0,
             map_block="",
             entities=self.map_block.get_entity_dto(),
             player=self.__player_data__,
@@ -94,13 +95,10 @@ class Player(Entity):
         return ClientPlayerDTO(
             name=self.name,
             id=self.id,
-            attributes=self.attributes.__dict__(),
             position=self.position,
-            health=self.health,
-            mana=self.mana,
             xp=self.xp,
             lvl=self.lvl,
-            inventory=str(self.inventory),
+            # inventory=str(self.inventory),
             map_block=self.map_block.name
         )
 
@@ -111,5 +109,5 @@ class Player(Entity):
             Player: A copy of the player.
         """
         player = super().__copy__()
-        player.inventory = self.inventory
+        # player.inventory = self.inventory
         return player

@@ -240,3 +240,4 @@ if __name__ == "__main__":
     print(v)
     print(v%3)
     print(v//3)
+    print(v != Vector2(1, 2) * 10)
