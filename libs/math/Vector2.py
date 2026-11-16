@@ -24,7 +24,9 @@ class Vector2:
         """
         if len(position) > 2:
             raise TypeError(f"{self._vector_type_} only accepts two positions")
-        if len(position) == 1:
+        if len(position) == 0:
+            self.x = self.z = 0
+        elif len(position) == 1:
             if type(position[0]) == str:
                 self.from_string(position[0])
             elif type(position[0]) in [tuple, list]:
@@ -215,7 +217,7 @@ class Vector2:
         """
         return f"<{self._vector_type_}:{self.x},{self.z}>"
 
-    def __eq__(self, other: Vector2) -> bool:
+    def __eq__(self, other: "Vector2") -> bool:
         """Checks equality between two vectors.
 
         Args:
@@ -225,6 +227,14 @@ class Vector2:
             bool: True if they are equal, False otherwise.
         """
         return self.x == other.x and self.z == other.z
+
+    def copy(self):
+        """Returns a copy of the vector."""
+        v = self.__class__()
+        v.x = self.x
+        v.z = self.z
+        return v
+
 
     @property
     def tuple(self):
