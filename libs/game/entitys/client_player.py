@@ -29,15 +29,6 @@ class ClientPlayer(Player):
             Position2(segment.x, segment.z)
             for segment in dto.body
         ] or [Position2(self.position.x, self.position.z)]
-        self.direction = Vector2(dto.direction.x, dto.direction.z)
-        self.next_direction = Vector2(
-            self.direction.x,
-            self.direction.z
-        )
-        self.orientation = Vector2(
-            self.direction.x,
-            self.direction.z
-        )
 
     def data_to_server(self) -> GameDataToServerDTO:
         return GameDataToServerDTO(

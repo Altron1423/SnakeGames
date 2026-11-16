@@ -21,11 +21,6 @@ class EntityToClientMapper:
                 if dto.body is not None
                 else None
             ),
-            "direction": (
-                str(dto.direction)
-                if dto.direction is not None
-                else None
-            ),
         }
 
     @staticmethod
@@ -40,11 +35,6 @@ class EntityToClientMapper:
             body=(
                 [Position2(segment) for segment in body_data]
                 if body_data is not None
-                else None
-            ),
-            direction=(
-                Vector2(data["direction"])
-                if data.get("direction") is not None
                 else None
             ),
         )

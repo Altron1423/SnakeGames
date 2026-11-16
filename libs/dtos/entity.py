@@ -16,4 +16,3 @@ class EntityToClientDTO:
     orientation: Vector2
     visual_action: str
     body: list[Position2] | None = None
-    direction: Vector2 | None = None

@@ -255,7 +255,7 @@ class Camera:
 
     def draw_entity(self, entity: ClientEnemy):
         if entity.body:
-            self._draw_snake(entity.body, entity.direction)
+            self._draw_snake(entity.body, entity.orientation)
             return
 
         self.player_animator.set_type(
@@ -274,7 +274,7 @@ class Camera:
 
         self._draw_snake(
             self.player.body or [self.player.position],
-            self.player.direction,
+            self.player.orientation,
         )
 
     def get_surface(self):

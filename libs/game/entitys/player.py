@@ -13,18 +13,21 @@ class Player(Entity):
     """Серверная модель игрока-змеи."""
 
     entity_type: str = "Player"
+    was_selected: bool = False
     free_moving: bool = False
+    last_game_tick: int = 0
+
+    body: list[Position2]
 
     INITIAL_LENGTH = 3
 
     def __init__(self):
         super().__init__()
         self.speed = PLATE_SIZE
+        self.orientation = Vector2(1, 0)
 
         # Координаты хранятся от головы к хвосту.
-        self.direction = Vector2(0, 1)
-        self.next_direction = Vector2(0, 1)
-        self.body: list[Position2] = []
+        self.body = []
         self.last_game_tick = 0
 
     def set_default(self, name: str, spawn_position: Position2):
@@ -32,14 +35,10 @@ class Player(Entity):
         self.name = name
         self.position = Position2(spawn_position.x, spawn_position.z)
 
-        self.direction = Vector2(0, 1)
-        self.next_direction = Vector2(0, 1)
-        self.orientation = Vector2(self.direction.x, self.direction.z)
-
         self.body = [
             Position2(
-                self.position.x - self.direction.x * self.speed * index,
-                self.position.z - self.direction.z * self.speed * index,
+                self.position.x - self.orientation.x * self.speed * index,
+                self.position.z - self.orientation.z * self.speed * index,
             )
             for index in range(self.INITIAL_LENGTH)
         ]
@@ -49,32 +48,21 @@ class Player(Entity):
         if dto.action != "select":
             return
 
-        requested = dto.move
-        is_cardinal = (
-            (requested.x in (-1, 1) and requested.z == 0)
-            or (requested.z in (-1, 1) and requested.x == 0)
-        )
-        if not is_cardinal:
-            return
-
-        requested = Vector2(int(requested.x), int(requested.z))
-
-        # Разворот на 180 градусов запрещён.
-        if requested == self.direction * -1:
-            return
-
-        self.next_direction = requested
+        if abs(dto.move.x) + abs(dto.move.z) <= 2.2 and not self.was_selected:
+            if self.orientation == dto.move * -1:
+                return
+            self.orientation = dto.move
+            self.was_selected = True
 
     def update(self, game_tick: int):
         """Двигает голову и сдвигает за ней остальные сегменты один раз за тик."""
         if self.last_game_tick == game_tick:
             return
 
+        self.was_selected = False
         self.last_game_tick = game_tick
-        self.direction = Vector2(self.next_direction.x, self.next_direction.z)
-        self.orientation = Vector2(self.direction.x, self.direction.z)
 
-        next_position = self.position + self.direction * self.speed
+        next_position = self.position + self.orientation * self.speed
 
         # Хвост освобождает клетку на этом шаге, поэтому входить в неё можно.
         if next_position in self.body[:-1]:
@@ -122,7 +110,6 @@ class Player(Entity):
                 Position2(segment.x, segment.z)
                 for segment in self.body
             ],
-            direction=Vector2(self.direction.x, self.direction.z),
         )
 
     def disconnect(self):
@@ -156,17 +143,12 @@ class Player(Entity):
                 Position2(segment.x, segment.z)
                 for segment in self.body
             ],
-            direction=Vector2(self.direction.x, self.direction.z),
         )
 
     def __copy__(self) -> "Player":
         """Creates a copy of the player, including every snake segment."""
-        player = super().__copy__()
-        player.direction = Vector2(self.direction.x, self.direction.z)
-        player.next_direction = Vector2(
-            self.next_direction.x,
-            self.next_direction.z
-        )
+        player: Player = super().__copy__()
+        player.speed = self.speed
         player.body = [
             Position2(segment.x, segment.z)
             for segment in self.body

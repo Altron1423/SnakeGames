@@ -22,4 +22,3 @@ class ClientPlayerDTO:
     lvl: int
     map_block: str
     body: list[Position2] = field(default_factory=list)
-    direction: Vector2 = field(default_factory=lambda: Vector2(0, 1))

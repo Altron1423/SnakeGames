@@ -24,6 +24,11 @@ class PositionData:
                 if entity.entity_type == "Fruit":
                     return True
             return False
+        elif other == 4:
+            for entity in self.plate.entities:
+                if entity.entity_type == "Player":
+                    return True
+            return False
         return False
 
     def __str__(self) -> str:

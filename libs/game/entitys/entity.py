@@ -152,18 +152,18 @@ class Entity:
         if abs(new_height - start_height) > self.step_height:
             return -1, None
 
-        collected_fruit = None
+        entity_interact = None
         for entity in new_plate.entities:
             if entity.entity_type == "Player":
-                return -1, None
+                return -1, entity
             if entity.entity_type == "Fruit":
-                collected_fruit = entity
+                entity_interact = entity
                 break
 
         # The entity must enter the fruit's cell before the caller handles it.
         self.position = new_position
-        if collected_fruit is not None:
-            return 1, collected_fruit
+        if entity_interact is not None:
+            return 1, entity_interact
         return 0, None
 
 

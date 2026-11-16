@@ -43,7 +43,6 @@ class ClientPlayerMapper:
             "lvl": dto.lvl,
             "map_block": dto.map_block,
             "body": [str(segment) for segment in dto.body],
-            "direction": str(dto.direction),
         }
 
     @staticmethod
@@ -56,7 +55,6 @@ class ClientPlayerMapper:
             if body_data
             else [Position2(data["position"])]
         )
-        direction_data = data.get("direction")
 
         return ClientPlayerDTO(
             name=data["name"],
@@ -66,9 +64,4 @@ class ClientPlayerMapper:
             lvl=data["lvl"],
             map_block=data["map_block"],
             body=body,
-            direction=(
-                Vector2(direction_data)
-                if direction_data
-                else Vector2(0, 1)
-            ),
         )
