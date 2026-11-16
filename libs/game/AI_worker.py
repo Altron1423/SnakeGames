@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Callable
 
-from file_works.compilator import Compilator
+from ..file_works.compilator import Compilator
 from libs.math import Vector2, Position2
 from .. import MapBlock, MapPlate, PLATE_SIZE
 from .entitys import ClientPlayer

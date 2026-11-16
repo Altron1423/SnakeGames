@@ -197,7 +197,67 @@ class Camera:
                     )
                     pg.draw.rect(self.surface, (255, 0, 0), pos_plate_draw, 2)
 
+    def _draw_snake(self, body: list[Position2], direction: Vector2):
+        """Draws a snake from head-to-tail world coordinates."""
+        if not body:
+            return
+
+        origin = self.plate_size * self.center_pos
+        radius = max(4, int(self.plate_size.x * 0.29))
+        points = []
+        for segment in body:
+            screen_position = origin + (segment - self.position) * self.scale
+            points.append((int(screen_position.x), int(screen_position.z)))
+
+        # Draw the connected body from tail to head so the head stays on top.
+        outline_color = (24, 91, 49)
+        body_color = (76, 168, 91)
+        for index in range(len(points) - 1, 0, -1):
+            pg.draw.line(
+                self.surface,
+                outline_color,
+                points[index],
+                points[index - 1],
+                radius * 2 + 4,
+            )
+            pg.draw.line(
+                self.surface,
+                body_color,
+                points[index],
+                points[index - 1],
+                radius * 2,
+            )
+            pg.draw.circle(self.surface, outline_color, points[index], radius + 2)
+            pg.draw.circle(self.surface, body_color, points[index], radius)
+
+        head = points[0]
+        pg.draw.circle(self.surface, outline_color, head, radius + 3)
+        pg.draw.circle(self.surface, (47, 190, 91), head, radius)
+
+        # Two small eyes face the current movement direction.
+        if direction is None or (direction.x == 0 and direction.z == 0):
+            direction = Vector2(0, 1)
+        side_x, side_z = -direction.z, direction.x
+        forward_offset = max(1, int(radius * 0.16))
+        side_offset = max(2, int(radius * 0.43))
+        eye_radius = max(2, radius // 4)
+        for side in (-1, 1):
+            eye = (
+                int(head[0] + direction.x * forward_offset + side_x * side * side_offset),
+                int(head[1] + direction.z * forward_offset + side_z * side * side_offset),
+            )
+            pg.draw.circle(self.surface, (245, 245, 220), eye, eye_radius)
+            pupil = (
+                int(eye[0] + direction.x),
+                int(eye[1] + direction.z),
+            )
+            pg.draw.circle(self.surface, (28, 48, 31), pupil, max(1, eye_radius // 2))
+
     def draw_entity(self, entity: ClientEnemy):
+        if entity.body:
+            self._draw_snake(entity.body, entity.direction)
+            return
+
         self.player_animator.set_type(
             self.player.preferential_orientation()
         )
@@ -212,15 +272,10 @@ class Camera:
             if name != self.player.name:
                 self.draw_entity(entity)
 
-        self.player_animator.set_type(
-            self.player.preferential_orientation()
+        self._draw_snake(
+            self.player.body or [self.player.position],
+            self.player.direction,
         )
-
-        position = self.plate_size * self.center_pos
-        surf = self.player_animator.get_surface()
-        if surf is not None:
-            self.surface.blit(surf, (position - self.scaled_collision * 2).tuple)
-        pg.draw.rect(self.surface, (0, 255, 0), rect(position - self.scaled_collision, self.scaled_collision * 2), 5)
 
     def get_surface(self):
         return self.surface

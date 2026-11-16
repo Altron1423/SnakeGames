@@ -6,46 +6,45 @@ from libs.math import Position2, Vector2
 
 @dataclass(frozen=True, slots=True)
 class EntityToClientMapper:
-    """Mapper for entity data sent to the client.
-
-    This class provides static methods to convert between EntityToClientDTO
-    and dictionary representations.
-    """
+    """Mapper for entity data sent to the client."""
 
     @staticmethod
-    def dto_to_dict(dto: EntityToClientDTO) -> dict[str, str | int]:
-        """Converts an EntityToClientDTO to a dictionary.
-
-        Args:
-            dto (EntityToClientDTO): The entity to client data DTO.
-
-        Returns:
-            dict[str, str]: A dictionary representation of the entity data.
-        """
+    def dto_to_dict(dto: EntityToClientDTO) -> dict:
         return {
             "name": dto.name,
             "id": dto.id,
             "position": str(dto.position),
             "orientation": str(dto.orientation),
-            "visual_action": dto.visual_action
+            "visual_action": dto.visual_action,
+            "body": (
+                [str(segment) for segment in dto.body]
+                if dto.body is not None
+                else None
+            ),
+            "direction": (
+                str(dto.direction)
+                if dto.direction is not None
+                else None
+            ),
         }
 
     @staticmethod
     def dict_to_dto(data: dict) -> EntityToClientDTO:
-        """Converts a dictionary to an EntityToClientDTO.
-
-        Args:
-            data (dict): The dictionary containing entity data.
-
-        Returns:
-            EntityToClientDTO: The reconstructed EntityToClientDTO.
-        """
-        from libs import ProgressBar
+        body_data = data.get("body")
         return EntityToClientDTO(
             name=data["name"],
             id=data["id"],
             position=Position2(data["position"]),
             orientation=Vector2(data["orientation"]),
-            visual_action=data["visual_action"]
+            visual_action=data["visual_action"],
+            body=(
+                [Position2(segment) for segment in body_data]
+                if body_data is not None
+                else None
+            ),
+            direction=(
+                Vector2(data["direction"])
+                if data.get("direction") is not None
+                else None
+            ),
         )
-

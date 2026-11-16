@@ -2,7 +2,7 @@ import structlog
 import json
 
 from .jwt_security import security
-from config import Settings
+from file_server.config import Settings
 
 logger = structlog.get_logger(__name__)
 

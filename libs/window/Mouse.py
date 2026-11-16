@@ -1,5 +1,7 @@
+from __future__ import annotations
 import pygame as pg
 from libs.math import Position2
+
 
 class Mouse:
     """Manages mouse interaction and position tracking across multiple screens.

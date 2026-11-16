@@ -1,3 +1,4 @@
+from __future__ import annotations
 class Vector2:
     """A 2D vector class for mathematical operations.
 

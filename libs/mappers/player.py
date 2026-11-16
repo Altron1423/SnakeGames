@@ -1,29 +1,15 @@
 from dataclasses import dataclass
 
-from libs.dtos import (
-    PlayerLoadDTO, ClientPlayerDTO
-)
-from libs.math import Position2
+from libs.dtos import PlayerLoadDTO, ClientPlayerDTO
+from libs.math import Position2, Vector2
 
 
 @dataclass(frozen=True, slots=True)
 class PlayerLoadMapper:
-    """Mapper for player load data.
-
-    This class provides static methods to convert between PlayerLoadDTO
-    and dictionary representations.
-    """
+    """Mapper for player load data."""
 
     @staticmethod
     def dto_to_dict(dto: PlayerLoadDTO) -> dict[str, str | dict | int | float]:
-        """Converts a PlayerLoadDTO to a dictionary.
-
-        Args:
-            dto (PlayerLoadDTO): The player load data DTO.
-
-        Returns:
-            dict[str, str | dict | int | float]: A dictionary representation of the player load data.
-        """
         return {
             "race": dto.race,
             "attributes": dto.attributes,
@@ -34,14 +20,6 @@ class PlayerLoadMapper:
 
     @staticmethod
     def dict_to_dto(data: dict) -> PlayerLoadDTO:
-        """Converts a dictionary to a PlayerLoadDTO.
-
-        Args:
-            data (dict): The dictionary containing player load data.
-
-        Returns:
-            PlayerLoadDTO: The reconstructed PlayerLoadDTO.
-        """
         return PlayerLoadDTO(
             race=data["race"],
             attributes=data["attributes"],
@@ -53,49 +31,44 @@ class PlayerLoadMapper:
 
 @dataclass(frozen=True, slots=True)
 class ClientPlayerMapper:
-    """Mapper for client player data.
-
-    This class provides static methods to convert between ClientPlayerDTO
-    and dictionary representations.
-    """
+    """Mapper for player state transferred from the server to a client."""
 
     @staticmethod
-    def dto_to_dict(dto: ClientPlayerDTO) -> dict[str, str | int | dict]:
-        """Converts a ClientPlayerDTO to a dictionary.
-
-        Args:
-            dto (ClientPlayerDTO): The client player data DTO.
-
-        Returns:
-            dict[str, str | int | dict]: A dictionary representation of the client player data.
-        """
+    def dto_to_dict(dto: ClientPlayerDTO) -> dict:
         return {
             "name": dto.name,
             "id": dto.id,
             "position": str(dto.position),
             "xp": str(dto.xp),
             "lvl": dto.lvl,
-            # "inventory": str(dto.inventory),
-            "map_block": dto.map_block
+            "map_block": dto.map_block,
+            "body": [str(segment) for segment in dto.body],
+            "direction": str(dto.direction),
         }
 
     @staticmethod
     def dict_to_dto(data: dict) -> ClientPlayerDTO:
-        """Converts a dictionary to a ClientPlayerDTO.
-
-        Args:
-            data (dict): The dictionary containing client player data.
-
-        Returns:
-            ClientPlayerDTO: The reconstructed ClientPlayerDTO.
-        """
         from libs import ProgressBar
+
+        body_data = data.get("body")
+        body = (
+            [Position2(segment) for segment in body_data]
+            if body_data
+            else [Position2(data["position"])]
+        )
+        direction_data = data.get("direction")
+
         return ClientPlayerDTO(
             name=data["name"],
             id=data["id"],
             position=Position2(data["position"]),
             xp=ProgressBar.init_from_str(data["xp"]),
             lvl=data["lvl"],
-            # inventory=data["inventory"],
             map_block=data["map_block"],
+            body=body,
+            direction=(
+                Vector2(direction_data)
+                if direction_data
+                else Vector2(0, 1)
+            ),
         )

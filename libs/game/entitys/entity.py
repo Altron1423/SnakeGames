@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from libs import MapBlock, MapPlate, PLATE_SIZE, EntityToClientDTO
 from libs.game.sub_classes import ProgressBar
 from libs.game.sub_classes.progress_bar import TriggersDTO
@@ -137,22 +139,31 @@ class Entity:
             self.__move_free__()
 
     def __move_plate__(self) -> tuple[int, Entity | None]:
-        """Движение строго по клеткам"""
+        """Moves the entity by one plate and reports a collected fruit."""
         move_on = self.orientation * self.speed
-        _, start_plate, start_heigh = self.__get_info_positon__(self.position)
+        _, _, start_height = self.__get_info_positon__(self.position)
         new_position = self.position + move_on
-        _, new_plate, new_heigh = self.__get_info_positon__(new_position)
-        if not new_position in self.map_block.size_coordinate:
+
+        # Check map bounds before asking the map for the destination plate.
+        if new_position not in self.map_block.size_coordinate:
             return -1, None
-        if abs(new_heigh - start_heigh) > self.step_height:
+
+        _, new_plate, new_height = self.__get_info_positon__(new_position)
+        if abs(new_height - start_height) > self.step_height:
             return -1, None
+
+        collected_fruit = None
         for entity in new_plate.entities:
             if entity.entity_type == "Player":
                 return -1, None
-            elif entity.entity_type == "Fruit":
-                return 1, entity
+            if entity.entity_type == "Fruit":
+                collected_fruit = entity
+                break
 
+        # The entity must enter the fruit's cell before the caller handles it.
         self.position = new_position
+        if collected_fruit is not None:
+            return 1, collected_fruit
         return 0, None
 
 

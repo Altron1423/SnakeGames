@@ -1,3 +1,5 @@
+from typing import Any
+
 import pygame as pg
 
 from libs.Loger import loger
@@ -448,7 +450,7 @@ class ManyPolygonizer(Resizer):
                 return polygon
         return None
 
-    def __iadd__(self, other: ManyPolygonizer):
+    def __iadd__(self, other: "ManyPolygonizer"):
         """Merges another ManyPolygonizer into this one.
 
         Args:

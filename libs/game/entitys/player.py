@@ -1,70 +1,129 @@
-from libs import PLATE_SIZE
-from libs.dtos import ClientPlayerDTO, GameDataToServerDTO, GameDataToClientDTO, PlayerLoadDTO
-# from libs.game.sub_classes import Inventory
-from libs.math import Position2
+from libs import PLATE_SIZE, EntityToClientDTO
+from libs.dtos import (
+    ClientPlayerDTO,
+    GameDataToServerDTO,
+    GameDataToClientDTO,
+    PlayerLoadDTO,
+)
+from libs.math import Position2, Vector2
 from .entity import Entity
 
 
 class Player(Entity):
-    """Represents a player in the game.
+    """Серверная модель игрока-змеи."""
 
-    Inherits from the Entity class and includes player-specific properties like inventory.
-    """
     entity_type: str = "Player"
-    was_selected: bool = False
     free_moving: bool = False
-    last_game_tick: int = 0
-    # inventory: Inventory
+
+    INITIAL_LENGTH = 3
 
     def __init__(self):
-        """Initializes a new Player instance."""
         super().__init__()
         self.speed = PLATE_SIZE
-        # self.inventory = Inventory()
+
+        # Координаты хранятся от головы к хвосту.
+        self.direction = Vector2(0, 1)
+        self.next_direction = Vector2(0, 1)
+        self.body: list[Position2] = []
+        self.last_game_tick = 0
 
     def set_default(self, name: str, spawn_position: Position2):
-        """Sets the initial name and spawn position for the player.
-
-        Args:
-            name (str): The player's name.
-            spawn_position (Position2): The initial position.
-        """
+        """Задаёт имя, начальную позицию и формирует тело змеи."""
         self.name = name
-        self.position = spawn_position
+        self.position = Position2(spawn_position.x, spawn_position.z)
+
+        self.direction = Vector2(0, 1)
+        self.next_direction = Vector2(0, 1)
+        self.orientation = Vector2(self.direction.x, self.direction.z)
+
+        self.body = [
+            Position2(
+                self.position.x - self.direction.x * self.speed * index,
+                self.position.z - self.direction.z * self.speed * index,
+            )
+            for index in range(self.INITIAL_LENGTH)
+        ]
 
     def set_changes_from_client(self, dto: GameDataToServerDTO):
-        """Updates the player's state based on client input.
+        """Принимает только четыре направления движения по клеткам."""
+        if dto.action != "select":
+            return
 
-        Args:
-            dto (GameDataToServerDTO): The data received from the client.
-        """
-        if abs(dto.move.x) + abs(dto.move.z) <= 2.2 and dto.action == "select" and not self.was_selected:
-            self.orientation = dto.move
-            self.was_selected = True
+        requested = dto.move
+        is_cardinal = (
+            (requested.x in (-1, 1) and requested.z == 0)
+            or (requested.z in (-1, 1) and requested.x == 0)
+        )
+        if not is_cardinal:
+            return
+
+        requested = Vector2(int(requested.x), int(requested.z))
+
+        # Разворот на 180 градусов запрещён.
+        if requested == self.direction * -1:
+            return
+
+        self.next_direction = requested
 
     def update(self, game_tick: int):
-        if self.last_game_tick != game_tick:
-            self.was_selected = False
-            self.last_game_tick = game_tick
-            move_data = self.__move_plate__()
-            if move_data[0] == 1:
-                self.add_xp(move_data[1].scored)
+        """Двигает голову и сдвигает за ней остальные сегменты один раз за тик."""
+        if self.last_game_tick == game_tick:
+            return
+
+        self.last_game_tick = game_tick
+        self.direction = Vector2(self.next_direction.x, self.next_direction.z)
+        self.orientation = Vector2(self.direction.x, self.direction.z)
+
+        next_position = self.position + self.direction * self.speed
+
+        # Хвост освобождает клетку на этом шаге, поэтому входить в неё можно.
+        if next_position in self.body[:-1]:
+            return
+
+        move_result, collected_fruit = self.__move_plate__()
+        if move_result < 0:
+            return
+
+        self.body.insert(
+            0,
+            Position2(self.position.x, self.position.z)
+        )
+
+        if move_result == 1 and collected_fruit is not None:
+            self.add_xp(collected_fruit.scored)
+
+            # Убираем собранный фрукт с клетки, чтобы его нельзя было собрать повторно.
+            _, fruit_plate, _ = self.__get_info_positon__(self.position)
+            if collected_fruit in fruit_plate.entities:
+                fruit_plate.entities.remove(collected_fruit)
+        else:
+            self.body.pop()
 
     def get_data_for_client(self, game_tick) -> GameDataToClientDTO:
-        """Prepares player data for transmission to the client.
-
-        Returns:
-            GameDataToClientDTO: The DTO containing player-related data.
-        """
-        dto = GameDataToClientDTO(
+        """Подготавливает состояние игрока и тела змеи для клиента."""
+        return GameDataToClientDTO(
             game_tick=game_tick,
             map_block="",
             entities=self.map_block.get_entity_dto(),
             player=self.__player_data__,
             chunk_position=Position2(0, 0),
-            position=self.position
+            position=self.position,
         )
-        return dto
+
+    def get_light_data(self) -> EntityToClientDTO:
+        """Передаёт тело змеи другим игрокам в многопользовательской игре."""
+        return EntityToClientDTO(
+            name=self.name,
+            id=self.id,
+            position=self.position,
+            orientation=self.orientation,
+            visual_action="walk",
+            body=[
+                Position2(segment.x, segment.z)
+                for segment in self.body
+            ],
+            direction=Vector2(self.direction.x, self.direction.z),
+        )
 
     def disconnect(self):
         """Removes the player from the current map block."""
@@ -75,53 +134,42 @@ class Player(Entity):
         self.map_block.players_in_game.append(self)
 
     def get_near_entity(self, max_range: int) -> dict[str, int]:
-        """Retrieves nearby entities within a certain range.
-
-        Args:
-            max_range (int): The maximum distance to search.
-
-        Returns:
-            dict[str, int]: A dictionary of entity names and their IDs.
-        """
+        """Retrieves nearby entities within a certain range."""
         return self.map_block.get_near_entity(self.name, max_range)
 
     @classmethod
     def load_from_config(cls, dto: PlayerLoadDTO) -> "Player":
-        """Loads a player from a provided configuration DTO.
-
-        Args:
-            dto (PlayerLoadDTO): The DTO containing player configuration.
-
-        Returns:
-            Player: The loaded player instance.
-        """
-        player = super().load_from_config(dto)
-
-        return player
+        """Loads the player's existing progression settings."""
+        return super().load_from_config(dto)
 
     @property
     def __player_data__(self) -> ClientPlayerDTO:
-        """Prepares player data for client-side representation.
-
-        Returns:
-            ClientPlayerDTO: The DTO containing player data.
-        """
+        """Prepares player data for client-side representation."""
         return ClientPlayerDTO(
             name=self.name,
             id=self.id,
-            position=self.position,
+            position=Position2(self.position.x, self.position.z),
             xp=self.xp,
             lvl=self.lvl,
-            # inventory=str(self.inventory),
-            map_block=self.map_block.name
+            map_block=self.map_block.name,
+            body=[
+                Position2(segment.x, segment.z)
+                for segment in self.body
+            ],
+            direction=Vector2(self.direction.x, self.direction.z),
         )
 
     def __copy__(self) -> "Player":
-        """Creates a copy of the player.
-
-        Returns:
-            Player: A copy of the player.
-        """
+        """Creates a copy of the player, including every snake segment."""
         player = super().__copy__()
-        # player.inventory = self.inventory
+        player.direction = Vector2(self.direction.x, self.direction.z)
+        player.next_direction = Vector2(
+            self.next_direction.x,
+            self.next_direction.z
+        )
+        player.body = [
+            Position2(segment.x, segment.z)
+            for segment in self.body
+        ]
+        player.last_game_tick = self.last_game_tick
         return player

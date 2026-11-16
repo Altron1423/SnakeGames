@@ -5,87 +5,63 @@ from .player import Player
 
 
 class ClientPlayer(Player):
-    """Represents a player on the client side.
+    """Client-side player state and input handling."""
 
-    Inherits from the Player class and provides client-side logic such as
-    handling server updates and preparing data for transmission.
-    """
     entity_type: str = "ClientPlayer"
-    raw_orientation: Vector2
-    map_block_name: str
-    last_direction_view: str
 
     def __init__(self, player_name: str):
-        """Initializes a new ClientPlayer instance.
-
-        Args:
-            player_name (str): The player's name.
-        """
         super().__init__()
         self.raw_orientation = Vector2(0, 0)
         self.player_name = player_name
-        self.last_direction_view = 'down'
+        self.last_direction_view = "down"
 
     def preferential_orientation(self) -> str:
-        """Returns the combined action and direction string.
-
-        Returns:
-            str: A string like 'run_right' or 'idle_down'.
-        """
         return f"{self.type_action}_{self.direction_view}"
 
     def get_data_from_server(self, dto: ClientPlayerDTO):
-        """Updates client-side player data from server DTO.
-
-        Args:
-            dto (ClientPlayerDTO): The DTO containing server-side player data.
-        """
         self.name = dto.name
         self.id = dto.id
-        self.position = dto.position
+        self.position = Position2(dto.position.x, dto.position.z)
         self.xp = dto.xp
         self.lvl = dto.lvl
         self.map_block = map_block_loader.get(dto.map_block)
+        self.body = [
+            Position2(segment.x, segment.z)
+            for segment in dto.body
+        ] or [Position2(self.position.x, self.position.z)]
+        self.direction = Vector2(dto.direction.x, dto.direction.z)
+        self.next_direction = Vector2(
+            self.direction.x,
+            self.direction.z
+        )
+        self.orientation = Vector2(
+            self.direction.x,
+            self.direction.z
+        )
 
     def data_to_server(self) -> GameDataToServerDTO:
-        """Prepares player data for transmission to the server.
-
-        Returns:
-            GameDataToServerDTO: The DTO containing player data.
-        """
         return GameDataToServerDTO(
             game_tick=0,
-            move=self.orientation,
-            action=None
+            move=Vector2(self.orientation.x, self.orientation.z),
+            action=None,
         )
 
     @property
     def direction_view(self) -> str:
-        """Updates and returns the current direction view string.
-
-        Returns:
-            str: The current direction ('right', 'left', 'down', or 'up').
-        """
         if self.orientation.x > 0:
-            self.last_direction_view = 'right'
+            self.last_direction_view = "right"
         elif self.orientation.x < 0:
-            self.last_direction_view = 'left'
+            self.last_direction_view = "left"
         elif self.orientation.z > 0:
-            self.last_direction_view = 'down'
+            self.last_direction_view = "down"
         elif self.orientation.z < 0:
-            self.last_direction_view = 'up'
+            self.last_direction_view = "up"
         return self.last_direction_view
 
     @property
     def type_action(self) -> str:
-        """Returns the current movement action.
-
-        Returns:
-            str: 'run', 'walk', or 'idle'.
-        """
         if self.orientation.x != 0 or self.orientation.z != 0:
             if self.speed_control > 1:
-                return 'run'
-            return 'walk'
-
-        return 'idle'
+                return "run"
+            return "walk"
+        return "idle"
