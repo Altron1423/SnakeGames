@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from libs.dtos import PlayerLoadDTO, ClientPlayerDTO
 from libs.math import Position2, Vector2
+from .entity import EntityToClientMapper
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,27 +40,30 @@ class ClientPlayerMapper:
             "name": dto.name,
             "id": dto.id,
             "position": str(dto.position),
+            "orientation": str(dto.orientation),
             "xp": str(dto.xp),
             "lvl": dto.lvl,
             "map_block": dto.map_block,
-            "body": [str(segment) for segment in dto.body],
+            "body": [
+                EntityToClientMapper.dto_to_dict(segment)
+                for segment in dto.body
+            ],
         }
 
     @staticmethod
     def dict_to_dto(data: dict) -> ClientPlayerDTO:
         from libs import ProgressBar
 
-        body_data = data.get("body")
-        body = (
-            [Position2(segment) for segment in body_data]
-            if body_data
-            else [Position2(data["position"])]
-        )
+        body = [
+            EntityToClientMapper.dict_to_dto(segment)
+            for segment in data.get("body", [])
+        ]
 
         return ClientPlayerDTO(
             name=data["name"],
             id=data["id"],
             position=Position2(data["position"]),
+            orientation=Vector2(data["orientation"]),
             xp=ProgressBar.init_from_str(data["xp"]),
             lvl=data["lvl"],
             map_block=data["map_block"],

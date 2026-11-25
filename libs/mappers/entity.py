@@ -17,7 +17,7 @@ class EntityToClientMapper:
             "orientation": str(dto.orientation),
             "visual_action": dto.visual_action,
             "body": (
-                [str(segment) for segment in dto.body]
+                [EntityToClientMapper.dto_to_dict(segment) for segment in dto.body]
                 if dto.body is not None
                 else None
             ),
@@ -33,7 +33,7 @@ class EntityToClientMapper:
             orientation=Vector2(data["orientation"]),
             visual_action=data["visual_action"],
             body=(
-                [Position2(segment) for segment in body_data]
+                [EntityToClientMapper.dict_to_dto(segment) for segment in body_data]
                 if body_data is not None
                 else None
             ),

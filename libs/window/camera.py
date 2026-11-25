@@ -197,85 +197,51 @@ class Camera:
                     )
                     pg.draw.rect(self.surface, (255, 0, 0), pos_plate_draw, 2)
 
-    def _draw_snake(self, body: list[Position2], direction: Vector2):
-        """Draws a snake from head-to-tail world coordinates."""
-        if not body:
+    def _draw_animated_entity(self, entity: ClientEnemy):
+        """Draws one client entity using its own EntityAnimator."""
+        entity.set_scale(self.scale)
+        if entity.animator is None:
             return
 
-        origin = self.plate_size * self.center_pos
-        radius = max(4, int(self.plate_size.x * 0.29))
-        points = []
-        for segment in body:
-            screen_position = origin + (segment - self.position) * self.scale
-            points.append((int(screen_position.x), int(screen_position.z)))
-
-        # Draw the connected body from tail to head so the head stays on top.
-        outline_color = (24, 91, 49)
-        body_color = (76, 168, 91)
-        for index in range(len(points) - 1, 0, -1):
-            pg.draw.line(
-                self.surface,
-                outline_color,
-                points[index],
-                points[index - 1],
-                radius * 2 + 4,
+        entity.animator.set_type(entity.preferential_orientation)
+        position = (
+            self.plate_size * self.center_pos
+            + (entity.position - self.position) * self.scale
+        )
+        surface = entity.animator.get_surface()
+        if surface is not None:
+            self.surface.blit(
+                surface,
+                surface.get_rect(center=position.tuple),
             )
-            pg.draw.line(
-                self.surface,
-                body_color,
-                points[index],
-                points[index - 1],
-                radius * 2,
-            )
-            pg.draw.circle(self.surface, outline_color, points[index], radius + 2)
-            pg.draw.circle(self.surface, body_color, points[index], radius)
-
-        head = points[0]
-        pg.draw.circle(self.surface, outline_color, head, radius + 3)
-        pg.draw.circle(self.surface, (47, 190, 91), head, radius)
-
-        # Two small eyes face the current movement direction.
-        if direction is None or (direction.x == 0 and direction.z == 0):
-            direction = Vector2(0, 1)
-        side_x, side_z = -direction.z, direction.x
-        forward_offset = max(1, int(radius * 0.16))
-        side_offset = max(2, int(radius * 0.43))
-        eye_radius = max(2, radius // 4)
-        for side in (-1, 1):
-            eye = (
-                int(head[0] + direction.x * forward_offset + side_x * side * side_offset),
-                int(head[1] + direction.z * forward_offset + side_z * side * side_offset),
-            )
-            pg.draw.circle(self.surface, (245, 245, 220), eye, eye_radius)
-            pupil = (
-                int(eye[0] + direction.x),
-                int(eye[1] + direction.z),
-            )
-            pg.draw.circle(self.surface, (28, 48, 31), pupil, max(1, eye_radius // 2))
 
     def draw_entity(self, entity: ClientEnemy):
-        if entity.body:
-            self._draw_snake(entity.body, entity.orientation)
-            return
-
-        self.player_animator.set_type(
-            self.player.preferential_orientation()
-        )
-        position = self.plate_size * self.center_pos + (entity.position - self.position) * self.scale
-        surf = entity.animator.get_surface()
-        if surf is not None:
-            self.surface.blit(surf, (position - entity.scaled_collision * 2).tuple)
-        pg.draw.rect(self.surface, (0, 255, 0), rect(position - entity.scaled_collision, entity.scaled_collision * 2), 5)
+        """Draws a remote entity and each of its body segment entities."""
+        # Draw the tail first so the head is rendered over the body.
+        for segment in reversed(entity.body):
+            self.draw_entity(segment)
+        self._draw_animated_entity(entity)
 
     def draw_entities(self):
         for name, entity in self.entities.items():
             if name != self.player.name:
                 self.draw_entity(entity)
 
-        self._draw_snake(
-            self.player.body or [self.player.position],
-            self.player.orientation,
+        # The local head has its own animator; its body uses segment animators.
+        for segment in reversed(self.player.body):
+            self.draw_entity(segment)
+
+        self.player_animator.set_type(self.player.preferential_orientation())
+        position = (
+            self.plate_size * self.center_pos
+            + (self.player.position - self.position) * self.scale
         )
+        surface = self.player_animator.get_surface()
+        if surface is not None:
+            self.surface.blit(
+                surface,
+                surface.get_rect(center=position.tuple),
+            )
 
     def get_surface(self):
         return self.surface

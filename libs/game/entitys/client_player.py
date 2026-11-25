@@ -1,6 +1,7 @@
 from libs import GameDataToServerDTO, map_block_loader
 from libs.dtos.player import ClientPlayerDTO
-from libs.math import Position2, Vector2
+from libs.math import Vector2
+from .client_enemy import ClientEnemy
 from .player import Player
 
 
@@ -8,9 +9,11 @@ class ClientPlayer(Player):
     """Client-side player state and input handling."""
 
     entity_type: str = "ClientPlayer"
+    body: list[ClientEnemy]
 
     def __init__(self, player_name: str):
         super().__init__()
+        self.body = []
         self.raw_orientation = Vector2(0, 0)
         self.player_name = player_name
         self.last_direction_view = "down"
@@ -21,14 +24,12 @@ class ClientPlayer(Player):
     def get_data_from_server(self, dto: ClientPlayerDTO):
         self.name = dto.name
         self.id = dto.id
-        self.position = Position2(dto.position.x, dto.position.z)
+        self.position = dto.position
+        self.orientation = dto.orientation
         self.xp = dto.xp
         self.lvl = dto.lvl
         self.map_block = map_block_loader.get(dto.map_block)
-        self.body = [
-            Position2(segment.x, segment.z)
-            for segment in dto.body
-        ] or [Position2(self.position.x, self.position.z)]
+        self.body = ClientEnemy.update_segments(self.body, dto.body)
 
     def data_to_server(self) -> GameDataToServerDTO:
         return GameDataToServerDTO(

@@ -132,7 +132,7 @@ class GameServer:
             player = self.players_in_game[user_name]
             # loger.log(f"Server {user_name=} act.move={act.move}")
 
-            player.set_changes_from_client(act)
+            player.set_changes_from_client(act, self.game_tick)
             if not self.pause:
                 player.update(self.game_tick)
             if act.action == "re_pause":

@@ -1,4 +1,6 @@
 from dataclasses import dataclass, field
+
+from libs.dtos.entity import EntityToClientDTO
 from libs.math import Position2, Vector2
 
 
@@ -14,11 +16,12 @@ class PlayerLoadDTO:
 
 @dataclass
 class ClientPlayerDTO:
-    """Состояние игрока, передаваемое от сервера клиенту."""
+    """State of the local player sent from the server to the client."""
     name: str
     id: int
     position: Position2
+    orientation: Vector2
     xp: "ProgressBar"
     lvl: int
     map_block: str
-    body: list[Position2] = field(default_factory=list)
+    body: list[EntityToClientDTO] = field(default_factory=list)
